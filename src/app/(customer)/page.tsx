@@ -3,6 +3,7 @@ import { serverApi } from '@/lib/server/api';
 import { EmptyState } from '@/components/ui/misc';
 import { buttonClass } from '@/components/ui/button';
 import { BusinessCard } from '@/components/customer/explore/business-card';
+import { ResultsView } from '@/components/customer/explore/results-view';
 import { FavoritesProvider } from '@/components/customer/explore/favorites';
 import { SearchControls } from '@/components/customer/explore/search-controls';
 import { exploreHref, type ExploreQuery } from '@/components/customer/explore/query';
@@ -86,13 +87,18 @@ export default async function ExplorePage({ searchParams }: PageProps<'/'>) {
           />
         ) : (
           <FavoritesProvider>
-            <ul className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {businesses.map((b, i) => (
-                <li key={b.businessId}>
-                  <BusinessCard business={b} priority={i < 4} />
-                </li>
-              ))}
-            </ul>
+            <ResultsView
+              businesses={businesses}
+              list={
+                <ul className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {businesses.map((b, i) => (
+                    <li key={b.businessId}>
+                      <BusinessCard business={b} priority={i < 4} />
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
           </FavoritesProvider>
         )}
       </section>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useWork, workHref } from '@/components/work/context';
+import { useSetupStep } from '@/components/setup/context';
 import { cx } from '@/lib/format';
 import type { BusinessDetail } from '@/types/work-manage';
 import { ErrorBlock, Loading } from '../shared';
@@ -79,6 +80,8 @@ export function SettingsSection({
 
 // A sticky save row for forms: stays in reach on long pages.
 export function SaveBar({ dirty, saving, onReset, label = 'Save changes', disabled }: { dirty: boolean; saving: boolean; onReset?: () => void; label?: string; disabled?: boolean }) {
+  // In the setup wizard every step saves and continues, changed or not.
+  const setup = useSetupStep();
   return (
     <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-2 border-t border-line bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-card sm:border sm:shadow-card">
       {dirty ? <p className="mr-auto text-sm text-ink-2">Unsaved changes</p> : null}
@@ -87,8 +90,8 @@ export function SaveBar({ dirty, saving, onReset, label = 'Save changes', disabl
           Discard
         </Button>
       ) : null}
-      <Button type="submit" loading={saving} disabled={!dirty || disabled}>
-        {label}
+      <Button type="submit" loading={saving} disabled={(!dirty && !setup) || disabled}>
+        {setup ? 'Save & continue' : label}
       </Button>
     </div>
   );

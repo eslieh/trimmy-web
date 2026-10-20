@@ -9,6 +9,7 @@ import { FavoriteButton, FavoritesProvider } from '@/components/customer/explore
 import { PinIcon, StarIcon, Stars } from '@/components/customer/icons';
 import { DAYS, categoryLabel, dayName, hoursLabel, mapsUrl, openNow } from '@/components/customer/labels';
 import type { BusinessProfile } from '@/types/discovery';
+import { BusinessLocationMap } from '@/components/customer/business/location-map';
 
 export async function generateMetadata({ params }: PageProps<'/b/[businessId]'>): Promise<Metadata> {
   const profile = await getProfile((await params).businessId).catch(() => null);
@@ -151,6 +152,7 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
               </Section>
               <Section title="Location">
                 <p>{profile.address}</p>
+                <BusinessLocationMap lat={profile.lat} lng={profile.lng} name={profile.name} />
                 <a
                   href={mapsUrl(profile.lat, profile.lng, profile.address)}
                   target="_blank"

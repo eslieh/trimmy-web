@@ -12,6 +12,7 @@ import type { BusinessDetail } from '@/types/work-manage';
 import { ErrorBlock, Loading, SectionTitle } from '../shared';
 import { useApi } from '../use-api';
 import { SaveBar, SettingsSection } from './common';
+import { useSetupStep } from '@/components/setup/context';
 
 type FieldName = PaymentFieldOption['name'];
 type Values = Partial<Record<FieldName, string>>;
@@ -51,6 +52,7 @@ function PaymentForm({ business, reload, options }: { business: BusinessDetail; 
   const [values, setValues] = useState<Values>(initialValues);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const setup = useSetupStep();
 
   const option = options.types.find((t) => t.type === type) ?? options.types[0];
   const fields = option?.fields ?? [];
@@ -74,6 +76,7 @@ function PaymentForm({ business, reload, options }: { business: BusinessDetail; 
     try {
       const saved = await api<PaymentDestination>(`/businesses/${businessId}/payment-destination`, { method: 'PUT', body });
       toast.success(saved.verificationStatus === 'verified' ? 'Payment details saved' : 'Saved: we are checking these details');
+      setup?.next(); // in the setup wizard: on to the next step
       setSubmitted(false);
       reload();
     } catch (err) {

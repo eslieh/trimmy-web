@@ -34,11 +34,20 @@ export function AccountMenu() {
           <Link href="/bookings" className={item}>My bookings</Link>
           <Link href="/notifications" className={item}>Notifications</Link>
           <Link href="/account" className={item}>Account</Link>
-          {session.workplaces.length ? <div className="my-1 border-t border-line" /> : null}
+          <div className="my-1 border-t border-line" />
+          {session.workplaces.some((w) => w.role === 'owner') ? null : (
+            <Link href="/setup" className={item}>List your business</Link>
+          )}
           {session.workplaces.map((w) => (
-            <Link key={`${w.businessId}:${w.role}`} href={`/work/${w.businessId}`} className={item}>
+            <Link
+              key={`${w.businessId}:${w.role}`}
+              href={w.role === 'owner' && w.status !== 'published' ? `/setup/${w.businessId}` : `/work/${w.businessId}`}
+              className={item}
+            >
               {w.name}
-              <span className="ml-1 text-xs text-ink-3">{w.role === 'owner' ? 'Owner' : 'Front desk'}</span>
+              <span className="ml-1 text-xs text-ink-3">
+                {w.role === 'owner' ? (w.status === 'published' ? 'Owner' : 'Setup in progress') : 'Front desk'}
+              </span>
             </Link>
           ))}
           <div className="my-1 border-t border-line" />

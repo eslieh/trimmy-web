@@ -24,8 +24,11 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           </nav>
           <div className="ml-auto flex items-center gap-2">
             {workplace ? (
-              <Link href={`/work/${workplace.businessId}`} className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-surface-2 sm:block">
-                Switch to {workplace.name}
+              <Link
+                href={workplace.status === 'published' || workplace.role !== 'owner' ? `/work/${workplace.businessId}` : `/setup/${workplace.businessId}`}
+                className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-surface-2 sm:block"
+              >
+                {workplace.status === 'published' || workplace.role !== 'owner' ? `Switch to ${workplace.name}` : `Finish setting up ${workplace.name}`}
               </Link>
             ) : null}
             {session ? (

@@ -12,10 +12,10 @@ import type { BusinessCategory } from '@/types/business';
 import type { BusinessDetail, UpdateBusinessInfoInput } from '@/types/work-manage';
 import { SectionTitle } from '../shared';
 import { AMENITIES, BUSINESS_CATEGORIES, SaveBar, SettingsSection } from './common';
+import { LocationPicker } from '@/components/map/location-picker';
+import { NAIROBI } from '@/components/map/map';
+import { useSetupStep } from '@/components/setup/context';
 
-// Central Nairobi, only used if a business somehow has no saved pin: the
-// API needs lat/lng on every update and the web has no map picker yet.
-const FALLBACK_PIN = { lat: -1.2864, lng: 36.8172 };
 
 type Form = {
   name: string;
@@ -26,6 +26,7 @@ type Form = {
   building: string;
   floor: string;
   unit: string;
+  pin: { lat: number; lng: number } | null;
   amenities: string[];
 };
 
@@ -39,6 +40,7 @@ function toForm(b: BusinessDetail): Form {
     building: b.location?.building ?? '',
     floor: b.location?.floor ?? '',
     unit: b.location?.unit ?? '',
+    pin: b.location && typeof b.location.lat === 'number' ? { lat: b.location.lat, lng: b.location.lng } : null,
     amenities: b.amenities ?? [],
   };
 }
@@ -73,6 +75,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
   const [form, setForm] = useState<Form>(initial);
   const [custom, setCustom] = useState('');
   const [saving, setSaving] = useState(false);
+  const setup = useSetupStep();
   const [submitted, setSubmitted] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
@@ -99,7 +102,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
     e.preventDefault();
     setSubmitted(true);
     if (invalid) return;
-    const pin = business.location ?? FALLBACK_PIN;
+    const pin = form.pin ?? NAIROBI;
     const body: UpdateBusinessInfoInput = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -119,6 +122,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
     try {
       await api(`/businesses/${businessId}`, { method: 'PATCH', body });
       toast.success('Business info saved');
+      setup?.next(); // in the setup wizard: on to the next step
       setSubmitted(false);
       reload();
     } catch (err) {
@@ -165,7 +169,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
             <Input label="Floor" value={form.floor} onChange={(e) => set('floor', e.target.value)} placeholder="e.g. 2nd" />
             <Input label="Shop / unit" value={form.unit} onChange={(e) => set('unit', e.target.value)} placeholder="e.g. B14" />
           </div>
-          <p className="text-[13px] text-ink-2">To move the map pin itself, use the Trimmy app.</p>
+          <LocationPicker value={form.pin} onChange={(pos) => set('pin', pos)} />
         </div>
       </Card>
 

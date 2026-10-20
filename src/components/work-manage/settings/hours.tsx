@@ -11,6 +11,7 @@ import type { DayHours, WeeklyHours } from '@/types/business';
 import type { BusinessDetail } from '@/types/work-manage';
 import { WEEKDAYS } from '../shared';
 import { SaveBar, SettingsSection } from './common';
+import { useSetupStep } from '@/components/setup/context';
 
 // Quarter-hour choices. Close can also be 24:00 (open until midnight); the
 // server doesn't support overnight hours.
@@ -36,6 +37,7 @@ function HoursForm({ business, reload }: { business: BusinessDetail; reload: () 
   const initial = business.workingHours?.weeklyHours ?? EMPTY;
   const [hours, setHours] = useState<WeeklyHours>(initial);
   const [saving, setSaving] = useState(false);
+  const setup = useSetupStep();
   const dirty = JSON.stringify(hours) !== JSON.stringify(initial);
   const invalid = WEEKDAYS.some((d) => {
     const h = hours[d.key];
@@ -50,6 +52,7 @@ function HoursForm({ business, reload }: { business: BusinessDetail; reload: () 
     try {
       await api(`/businesses/${businessId}/working-hours`, { method: 'PUT', body: { weeklyHours: hours } });
       toast.success('Working hours saved');
+      setup?.next(); // in the setup wizard: on to the next step
       reload();
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't save your hours."));

@@ -6,7 +6,7 @@ import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/lib/server/session-names';
 //   because Server Components can read cookies but not write them;
 // - signed-out visitors to private areas are sent to sign in, then back.
 // Optimistic checks only: each area's layout still verifies the role.
-const PRIVATE = ['/work', '/bookings', '/account', '/notifications'];
+const PRIVATE = ['/work', '/bookings', '/account', '/notifications', '/setup'];
 
 export async function proxy(request: NextRequest) {
   const access = request.cookies.get(ACCESS_COOKIE)?.value;

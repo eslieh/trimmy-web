@@ -50,3 +50,33 @@
   background-clip: text;
   color: transparent;
 }
+
+/* Map pins (components/map): CSS-only, so no marker images to bundle. */
+.trimmy-pin {
+  background: transparent;
+  border: 0;
+}
+.trimmy-pin-dot {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--color-brand);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+.trimmy-pin-label {
+  display: inline-block;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  font: 700 13px/1.2 var(--font-sans);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+.leaflet-container {
+  font-family: var(--font-sans);
+}

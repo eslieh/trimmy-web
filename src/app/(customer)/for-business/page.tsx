@@ -42,16 +42,21 @@ export default async function ForBusinessPage() {
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {workplace ? (
-            <ButtonLink href={`/work/${workplace.businessId}`} size="lg" variant="secondary" className="border-white">
-              Open {workplace.name}
+            <ButtonLink
+              href={workplace.status === 'published' || workplace.role !== 'owner' ? `/work/${workplace.businessId}` : `/setup/${workplace.businessId}`}
+              size="lg"
+              variant="secondary"
+              className="border-white"
+            >
+              {workplace.status === 'published' || workplace.role !== 'owner' ? `Open ${workplace.name}` : `Finish setting up ${workplace.name}`}
             </ButtonLink>
           ) : session ? (
-            <ButtonLink href="#get-started" size="lg" variant="secondary" className="border-white">
-              How to get started
+            <ButtonLink href="/setup" size="lg" variant="secondary" className="border-white">
+              Set up your business
             </ButtonLink>
           ) : (
             <>
-              <ButtonLink href="/signup?next=/for-business" size="lg" variant="secondary" className="border-white">
+              <ButtonLink href="/signup?next=/setup" size="lg" variant="secondary" className="border-white">
                 Create a free account
               </ButtonLink>
               <ButtonLink href="/login?next=/work" size="lg" variant="ghost" className="text-white hover:bg-white/15">
@@ -85,9 +90,9 @@ export default async function ForBusinessPage() {
             <p className="mt-1 text-ink-2">Here on the web or in the app. It&apos;s the same account.</p>
           </li>
           <li>
-            <p className="font-bold">2. Set up your business in the app</p>
+            <p className="font-bold">2. Set up your business</p>
             <p className="mt-1 text-ink-2">
-              Business setup (photos, services, hours, policies and your M-Pesa payout details) happens in the Trimmy mobile app for now.
+              Add your photos, services, hours, policies and M-Pesa details, pin yourself on the map, then publish. Right here or in the app.
             </p>
           </li>
           <li>

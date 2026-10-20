@@ -16,6 +16,7 @@ export default async function WorkLayout({ children, params }: LayoutProps<'/wor
     session.workplaces.find((w) => w.businessId === businessId && w.role === 'owner') ??
     session.workplaces.find((w) => w.businessId === businessId);
   if (!workplace) notFound();
+  if (workplace.role === 'owner' && workplace.status !== 'published') redirect(`/setup/${businessId}`);
 
   return (
     <WorkProvider

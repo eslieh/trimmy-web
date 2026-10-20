@@ -11,6 +11,7 @@ import type { BusinessPolicies } from '@/types/business';
 import type { BusinessDetail } from '@/types/work-manage';
 import { SectionTitle, digitsOnly } from '../shared';
 import { SaveBar, SettingsSection } from './common';
+import { useSetupStep } from '@/components/setup/context';
 
 type Form = {
   required: boolean;
@@ -51,6 +52,7 @@ function PoliciesForm({ business, reload }: { business: BusinessDetail; reload: 
   const initial = toForm(business.policies);
   const [form, setForm] = useState<Form>(initial);
   const [saving, setSaving] = useState(false);
+  const setup = useSetupStep();
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
   const services = business.serviceCategories.flatMap((c) => c.services.map((s) => ({ ...s, categoryName: c.name })));
@@ -85,6 +87,7 @@ function PoliciesForm({ business, reload }: { business: BusinessDetail; reload: 
     try {
       await api(`/businesses/${businessId}/policies`, { method: 'PUT', body });
       toast.success('Policies saved');
+      setup?.next(); // in the setup wizard: on to the next step
       reload();
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't save your policies."));
