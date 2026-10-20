@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Trimmy's design tokens, the same values as the mobile app's src/theme:
+   near-black text, warm greys, white surfaces, one saturated accent. */
+@theme {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand: #771ee2;
+  --color-brand-pink: #e03ab3;
+  --color-ink: #222222;
+  --color-ink-2: #6a6a6a;
+  --color-ink-3: #9a9a9a;
+  --color-surface: #ffffff;
+  --color-surface-2: #f7f7f7;
+  --color-surface-3: #f0f0f0;
+  --color-line: #ebebeb;
+  --color-line-2: #dddddd;
+  --color-line-3: #c6c6c6;
+  --color-success: #0a8a4b;
+  --color-warning: #b45309;
+  --color-danger: #d0323c;
+
+  --radius-card: 16px;
+  --radius-sheet: 20px;
+
+  --shadow-card: 0 5px 14px rgb(0 0 0 / 0.08);
+  --shadow-raised: 0 10px 24px rgb(0 0 0 / 0.12);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-surface text-ink antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* The brand gradient, for the wordmark and the odd highlight. */
+.bg-brand-gradient {
+  background-image: linear-gradient(90deg, var(--color-brand), var(--color-brand-pink));
+}
+.text-brand-gradient {
+  background-image: linear-gradient(90deg, var(--color-brand), var(--color-brand-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
