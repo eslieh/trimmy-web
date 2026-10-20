@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Logo } from '@/components/ui/misc';
 import { cx } from '@/lib/format';
 import { WORK_NAV } from './nav';
@@ -14,7 +14,6 @@ export function WorkSidebar() {
   const { businessId, businessName, role } = useWork();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  useEffect(() => setOpen(false), [pathname]);
 
   const links = (
     <nav className="flex flex-col gap-6">
@@ -32,6 +31,7 @@ export function WorkSidebar() {
                   key={item.href}
                   href={href}
                   aria-current={active ? 'page' : undefined}
+                  onClick={() => setOpen(false)} // the phone drawer closes on navigating
                   className={cx(
                     'rounded-xl px-3 py-2.5 text-[15px] font-semibold transition-colors',
                     active ? 'bg-ink text-white' : 'text-ink hover:bg-surface-2',

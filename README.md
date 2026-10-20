@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trimmy web
 
-## Getting Started
+The web version of Trimmy: customers explore and book, and business owners and front desk run their day (desktop-first, responsive down to phones). Next.js 16 (App Router), React 19, TypeScript, Tailwind v4.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # TRIMMY_API_URL = the Trimmy API, NEXT_PUBLIC_SITE_URL = this app's origin
+npm install
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Google sign-in comes back to `<NEXT_PUBLIC_SITE_URL>/auth/google`. That URL must be in the API's `GOOGLE_WEB_REDIRECT_ALLOWLIST` (`http://localhost:3000/auth/google` is allowed by default locally).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it fits together
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Sessions are httpOnly cookies.** Sign-ins go through `src/app/api/auth/[action]` and the tokens never reach the page's JavaScript. `src/proxy.ts` refreshes an expired session before a page renders and sends signed-out visitors away from private pages.
+- **The browser talks to the API only through `/api/proxy/*`** (`src/app/api/proxy/[...path]`). It is same-origin, so no CORS. It adds the token, refreshes once on a 401, streams responses (the live `me/events` stream included), refuses token-issuing endpoints, and only accepts writes from this site.
+- **Server Components** read the API with `serverApi()` and the visitor with `getSession()` (`src/lib/server/`). Public pages (Explore, business profiles) are server-rendered for search engines.
+- **Areas:**
+  - `src/app/(customer)`: Explore, business pages, booking, my bookings, account.
+  - `src/app/(auth)`: sign in, sign up, verify, recover, Google callback.
+  - `src/app/work/[businessId]`: the business area. Owner and front desk get in; earnings, team, payouts and settings are owner-only.
+- **Live updates** (`src/components/notifications`): one event stream per tab, toasts, the bell, and `useLiveEvent()` for pages that refresh when bookings change.
+- Types in `src/types` mirror the mobile app's. The API contracts live in the mobile repo under `reference/api/`.

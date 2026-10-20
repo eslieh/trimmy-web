@@ -25,7 +25,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (!access && PRIVATE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  const booking = /^\/b\/[^/]+\/book(\/|$)/.test(pathname); // booking needs an account
+  if (!access && (booking || PRIVATE.some((p) => pathname === p || pathname.startsWith(`${p}/`)))) {
     const login = new URL('/login', request.url);
     login.searchParams.set('next', `${pathname}${search}`);
     return NextResponse.redirect(login);
