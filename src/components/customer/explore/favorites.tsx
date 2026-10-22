@@ -43,7 +43,8 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   return <FavoritesCtx.Provider value={value}>{children}</FavoritesCtx.Provider>;
 }
 
-export function FavoriteButton({ businessId, name, className }: { businessId: string; name: string; className?: string }) {
+// `overlay`: Airbnb's bare heart for photos, a white outline over a dark wash.
+export function FavoriteButton({ businessId, name, className, overlay }: { businessId: string; name: string; className?: string; overlay?: boolean }) {
   const ctx = useContext(FavoritesCtx);
   if (!ctx?.signedIn) return null;
   const on = ctx.isFavorite(businessId);
@@ -59,12 +60,18 @@ export function FavoriteButton({ businessId, name, className }: { businessId: st
       aria-pressed={on}
       aria-label={on ? `Remove ${name} from saved` : `Save ${name}`}
       className={cx(
-        'grid size-10 place-items-center rounded-full bg-white/90 shadow-card backdrop-blur transition-transform hover:scale-105',
-        on ? 'text-brand-pink' : 'text-ink',
+        'grid size-10 place-items-center rounded-full transition-transform hover:scale-110',
+        overlay ? '' : cx('bg-white/95 shadow-card', on ? 'text-brand-pink' : 'text-ink'),
         className,
       )}
     >
-      <HeartIcon filled={on} />
+      {overlay ? (
+        <svg viewBox="0 0 24 24" className={cx('size-7 drop-shadow-sm', on ? 'fill-brand-pink' : 'fill-black/40')} stroke="white" strokeWidth={2} aria-hidden>
+          <path d="M12 20.5s-7.5-4.6-9.2-9.4C1.7 7.8 3.9 4.5 7.3 4.5c2 0 3.6 1.1 4.7 2.7 1.1-1.6 2.7-2.7 4.7-2.7 3.4 0 5.6 3.3 4.5 6.6-1.7 4.8-9.2 9.4-9.2 9.4z" />
+        </svg>
+      ) : (
+        <HeartIcon filled={on} />
+      )}
     </button>
   );
 }

@@ -102,7 +102,7 @@ export function PhoneIcon({ className = 'size-4' }: P) {
 
 export function Stars({ rating, className = 'size-4' }: { rating: number; className?: string }) {
   return (
-    <span className="inline-flex text-ink" aria-label={`${rating} out of 5 stars`} role="img">
+    <span className="inline-flex text-brand-pink" aria-label={`${rating} out of 5 stars`} role="img">
       {[1, 2, 3, 4, 5].map((i) => (
         <StarIcon key={i} className={`${className} ${i <= Math.round(rating) ? '' : 'text-line-2'}`} />
       ))}

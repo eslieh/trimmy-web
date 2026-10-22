@@ -22,7 +22,7 @@ export function WorkSidebar() {
         if (!items.length) return null;
         return (
           <div key={i} className="flex flex-col gap-1">
-            {section.title ? <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-ink-3">{section.title}</p> : null}
+            {section.title ? <p className="flex items-center gap-2 px-3 pb-1 text-xs font-semibold tracking-wide text-ink uppercase"><span className="size-1.5 rounded-full bg-brand-pink" aria-hidden />{section.title}</p> : null}
             {items.map((item) => {
               const href = workHref(businessId, item.href);
               const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -34,7 +34,7 @@ export function WorkSidebar() {
                   onClick={() => setOpen(false)} // the phone drawer closes on navigating
                   className={cx(
                     'rounded-xl px-3 py-2.5 text-[15px] font-semibold transition-colors',
-                    active ? 'bg-ink text-white' : 'text-ink hover:bg-surface-2',
+                    active ? 'bg-accent-soft text-accent-foreground' : 'text-ink-2 hover:bg-ink/[0.04] hover:text-ink',
                   )}
                 >
                   {item.label}
@@ -57,7 +57,7 @@ export function WorkSidebar() {
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line bg-white px-3 py-6 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-ink/5 bg-white px-3 py-6 lg:flex">
         {header}
         <div className="flex-1 overflow-y-auto">{links}</div>
         <Link href="/" className="mt-4 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">

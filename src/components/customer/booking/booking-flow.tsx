@@ -56,7 +56,9 @@ function estimateDeposit(profile: BusinessProfile, chosen: BusinessProfileServic
 // The booking flow (mobile C2): services → professional → date & time →
 // review & policies → create → (deposit) M-Pesa prompt → wait → confirmed.
 // `resume` is a pending_payment booking reopened from ?booking=.
-export function BookingFlow({ profile, userPhone, resume }: { profile: BusinessProfile; userPhone: string | null; resume: Booking | null }) {
+export function BookingFlow({
+  profile, userPhone, resume, preferredStaffId = null,
+}: { profile: BusinessProfile; userPhone: string | null; resume: Booking | null; preferredStaffId?: string | null }) {
   const router = useRouter();
   const businessId = profile.businessId;
   const { ids, toggle, set: setCartIds } = useCart(businessId);
@@ -66,7 +68,7 @@ export function BookingFlow({ profile, userPhone, resume }: { profile: BusinessP
   const [stepState, setStep] = useState<Step | null>(resume ? (resume.depositPayment?.status === 'pending' ? 'pending' : 'pay') : null);
   // Until they move, start on Professional if services were picked on the profile.
   const step: Step = stepState ?? (chosen.length ? 'staff' : 'services');
-  const [staffId, setStaffId] = useState<string | null>(resume?.staffId ?? null);
+  const [pickedStaffId, setStaffId] = useState<string | null>(resume?.staffId ?? preferredStaffId);
   const [choice, setChoice] = useState<SlotChoice | null>(null);
   const [slotsVersion, setSlotsVersion] = useState(0);
   const [notes, setNotes] = useState('');
@@ -85,6 +87,8 @@ export function BookingFlow({ profile, userPhone, resume }: { profile: BusinessP
   const [pollRound, setPollRound] = useState(0);
 
   const eligibleStaff = profile.staff.filter((s) => s.allServices || serviceIds.every((id) => s.serviceIds.includes(id)));
+  // A professional picked on the profile only sticks while they do every chosen service.
+  const staffId = resume || !pickedStaffId || eligibleStaff.some((s) => s.staffId === pickedStaffId) ? pickedStaffId : null;
   const staff = staffId ? profile.staff.find((s) => s.staffId === staffId) ?? null : null;
   const total = chosen.reduce((sum, s) => sum + s.price.amount, 0);
   const minutes = chosen.reduce((sum, s) => sum + s.durationMinutes, 0);

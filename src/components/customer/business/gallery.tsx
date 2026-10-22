@@ -11,7 +11,7 @@ export function Gallery({ name, photos }: { name: string; photos: string[] }) {
   const [open, setOpen] = useState(false);
   if (!photos.length) {
     return (
-      <div className="relative aspect-[16/7] overflow-hidden rounded-card bg-surface-3">
+      <div className="relative aspect-[16/7] overflow-hidden rounded-[2rem] bg-surface-3">
         <Photo src={null} alt={name} sizes="100vw" />
       </div>
     );
@@ -26,7 +26,7 @@ export function Gallery({ name, photos }: { name: string; photos: string[] }) {
             key={src + i}
             type="button"
             onClick={() => setOpen(true)}
-            className="relative aspect-[4/3] w-[88%] shrink-0 snap-center overflow-hidden rounded-card bg-surface-3"
+            className="relative aspect-[4/3] w-[88%] shrink-0 snap-center overflow-hidden rounded-3xl bg-surface-3"
             aria-label={`Photo ${i + 1} of ${photos.length}: open all photos`}
           >
             <Photo src={src} alt={`${name}, photo ${i + 1}`} sizes="90vw" priority={i === 0} />
@@ -35,7 +35,7 @@ export function Gallery({ name, photos }: { name: string; photos: string[] }) {
       </div>
 
       {/* Tablet and up: the mosaic. */}
-      <div className={cx('relative hidden gap-2 overflow-hidden rounded-card sm:grid', grid.length >= 3 ? 'aspect-[16/7] grid-cols-4 grid-rows-2' : 'aspect-[16/7] grid-cols-2')}>
+      <div className={cx('relative hidden gap-2 overflow-hidden rounded-[2rem] sm:grid', grid.length >= 3 ? 'aspect-[16/7] grid-cols-4 grid-rows-2' : 'aspect-[16/7] grid-cols-2')}>
         {grid.map((src, i) => (
           <button
             key={src + i}
@@ -51,7 +51,7 @@ export function Gallery({ name, photos }: { name: string; photos: string[] }) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="absolute right-4 bottom-4 rounded-full border border-ink bg-white px-4 py-2 text-sm font-semibold shadow-card hover:bg-surface-2"
+            className="absolute right-4 bottom-4 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-card transition-transform hover:scale-[1.03]"
           >
             Show all {photos.length} photos
           </button>
@@ -61,7 +61,7 @@ export function Gallery({ name, photos }: { name: string; photos: string[] }) {
       <Modal open={open} onClose={() => setOpen(false)} title={`${name}: photos`} wide>
         <div className="flex flex-col gap-3 pb-4">
           {photos.map((src, i) => (
-            <div key={src + i} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-3">
+            <div key={src + i} className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-surface-3">
               <Photo src={src} alt={`${name}, photo ${i + 1}`} sizes="(min-width: 640px) 640px, 100vw" />
             </div>
           ))}

@@ -33,7 +33,8 @@ const RADIUS = [
 
 // Explore's search bar, category pills, filters and "near me". Everything
 // lives in the URL, so the server renders the results (and they're shareable).
-export function SearchControls({ query }: { query: ExploreQuery }) {
+// `onImage` turns the pills into the landing's glass pills for the sky hero.
+export function SearchControls({ query, onImage }: { query: ExploreQuery; onImage?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [text, setText] = useState(query.q ?? '');
@@ -74,10 +75,12 @@ export function SearchControls({ query }: { query: ExploreQuery }) {
   };
 
   const filterCount = [query.priceMax, query.ratingMin, query.radiusKm].filter((v) => v !== undefined).length;
+  const idle = onImage ? 'border-white/30 bg-white/10 text-white hover:bg-white/20' : 'border-line-2 bg-white hover:border-ink';
+  const on = onImage ? 'border-white bg-white text-ink' : 'border-ink bg-ink text-white';
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={submit} role="search" className="flex items-center gap-2 rounded-full border border-line-2 bg-white p-1.5 pl-5 shadow-card focus-within:border-ink">
+      <form onSubmit={submit} role="search" className="flex items-center gap-2 rounded-full border border-line-2 bg-white p-1.5 pl-5 shadow-card transition focus-within:border-ink focus-within:ring-4 focus-within:ring-accent-soft">
         <SearchIcon className="size-5 shrink-0 text-ink-2" />
         <label htmlFor="explore-q" className="sr-only">Search salons, barbers and services</label>
         <input
@@ -94,14 +97,14 @@ export function SearchControls({ query }: { query: ExploreQuery }) {
         </Button>
       </form>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 rounded-full [scrollbar-width:none]">
         <button
           type="button"
           onClick={toggleNear}
           aria-pressed={near}
           className={cx(
             'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
-            near ? 'border-ink bg-ink text-white' : 'border-line-2 bg-white hover:border-ink',
+            near ? on : idle,
           )}
         >
           {locating ? <Spinner className="size-4" /> : <LocateIcon />}
@@ -110,18 +113,18 @@ export function SearchControls({ query }: { query: ExploreQuery }) {
         <button
           type="button"
           onClick={() => setFiltersOpen(true)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line-2 bg-white px-4 py-2 text-sm font-semibold hover:border-ink"
+          className={cx('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors', idle)}
         >
           <SlidersIcon />
           Filters
-          {filterCount ? <span className="grid size-5 place-items-center rounded-full bg-ink text-xs text-white">{filterCount}</span> : null}
+          {filterCount ? <span className="grid size-5 place-items-center rounded-full bg-accent text-xs text-accent-foreground">{filterCount}</span> : null}
         </button>
-        <span className="mx-1 h-6 w-px shrink-0 bg-line-2" aria-hidden />
-        <CategoryPill active={!query.category} onClick={() => go({ ...query, category: undefined })}>
+        <span className={cx('mx-1 h-6 w-px shrink-0', onImage ? 'bg-white/30' : 'bg-line-2')} aria-hidden />
+        <CategoryPill onImage={onImage} active={!query.category} onClick={() => go({ ...query, category: undefined })}>
           All
         </CategoryPill>
         {CATEGORIES.map((c) => (
-          <CategoryPill key={c.value} active={query.category === c.value} onClick={() => go({ ...query, category: query.category === c.value ? undefined : c.value })}>
+          <CategoryPill key={c.value} onImage={onImage} active={query.category === c.value} onClick={() => go({ ...query, category: query.category === c.value ? undefined : c.value })}>
             {c.label}
           </CategoryPill>
         ))}
@@ -141,7 +144,7 @@ export function SearchControls({ query }: { query: ExploreQuery }) {
   );
 }
 
-function CategoryPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function CategoryPill({ active, onImage, onClick, children }: { active: boolean; onImage?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -149,7 +152,9 @@ function CategoryPill({ active, onClick, children }: { active: boolean; onClick:
       aria-pressed={active}
       className={cx(
         'shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-        active ? 'bg-ink text-white' : 'bg-surface-3 text-ink hover:bg-line',
+        onImage
+          ? active ? 'bg-accent text-accent-foreground' : 'bg-white/10 text-white hover:bg-white/20'
+          : active ? 'bg-ink text-white' : 'bg-ink/[0.04] text-ink hover:bg-accent-soft',
       )}
     >
       {children}

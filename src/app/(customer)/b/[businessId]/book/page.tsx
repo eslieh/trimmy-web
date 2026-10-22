@@ -10,13 +10,19 @@ import type { Booking } from '@/types/booking';
 export const metadata: Metadata = { title: 'Book', robots: { index: false } };
 
 // Booking needs an account (proxy.ts doesn't guard /b, so it's checked here).
-// ?booking=<id> reopens a booking still waiting for its deposit.
+// ?booking=<id> reopens a booking still waiting for its deposit; ?staff=<id>
+// starts with that professional picked (from the team sheet's "Book with").
 export default async function BookPage({ params, searchParams }: PageProps<'/b/[businessId]/book'>) {
   const { businessId } = await params;
-  const bookingId = firstParam((await searchParams).booking);
+  const query = await searchParams;
+  const bookingId = firstParam(query.booking);
+  const preferredStaffId = firstParam(query.staff) ?? null;
   const session = await getSession();
   if (!session) {
-    const here = `/b/${businessId}/book${bookingId ? `?booking=${encodeURIComponent(bookingId)}` : ''}`;
+    const qs = new URLSearchParams();
+    if (bookingId) qs.set('booking', bookingId);
+    if (preferredStaffId) qs.set('staff', preferredStaffId);
+    const here = `/b/${businessId}/book${qs.size ? `?${qs}` : ''}`;
     redirect(`/login?next=${encodeURIComponent(here)}`);
   }
   const profile = await getProfile(businessId);
@@ -34,5 +40,5 @@ export default async function BookPage({ params, searchParams }: PageProps<'/b/[
     }
   }
 
-  return <BookingFlow profile={profile} userPhone={session.user.phone} resume={resume} />;
+  return <BookingFlow profile={profile} userPhone={session.user.phone} resume={resume} preferredStaffId={preferredStaffId} />;
 }

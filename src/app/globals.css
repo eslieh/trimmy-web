@@ -1,15 +1,22 @@
 @import "tailwindcss";
 
-/* Trimmy's design tokens, the same values as the mobile app's src/theme:
-   near-black text, warm greys, white surfaces, one saturated accent. */
+/* Trimmy's design tokens, from the trimmy-landing design language (the mobile
+   app's src/theme still has the older purple values): plum-tinted near-black
+   text, white surfaces, one pink accent.
+   brand is the accent darkened to pass AA as text on white (5.4:1);
+   brand-pink is the landing's accent-strong, for dots, badges and highlights;
+   accent / accent-soft are fills only, never text on white. */
 @theme {
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
 
-  --color-brand: #771ee2;
-  --color-brand-pink: #e03ab3;
-  --color-ink: #222222;
-  --color-ink-2: #6a6a6a;
-  --color-ink-3: #9a9a9a;
+  --color-brand: #b83a6e;
+  --color-brand-pink: #d1477e;
+  --color-accent: #f6b9d6;
+  --color-accent-soft: #fde3ef;
+  --color-accent-foreground: #3a1424;
+  --color-ink: #14121a;
+  --color-ink-2: #4a4654;
+  --color-ink-3: #8a8594;
   --color-surface: #ffffff;
   --color-surface-2: #f7f7f7;
   --color-surface-3: #f0f0f0;
@@ -20,8 +27,8 @@
   --color-warning: #b45309;
   --color-danger: #d0323c;
 
-  --radius-card: 16px;
-  --radius-sheet: 20px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
 
   --shadow-card: 0 5px 14px rgb(0 0 0 / 0.08);
   --shadow-raised: 0 10px 24px rgb(0 0 0 / 0.12);
@@ -40,15 +47,36 @@
   }
 }
 
-/* The brand gradient, for the wordmark and the odd highlight. */
+/* The brand gradient, for the odd highlight. Both stops are dark enough to
+   carry white text. */
 .bg-brand-gradient {
-  background-image: linear-gradient(90deg, var(--color-brand), var(--color-brand-pink));
+  background-image: linear-gradient(90deg, #9c2f66, var(--color-brand));
 }
 .text-brand-gradient {
-  background-image: linear-gradient(90deg, var(--color-brand), var(--color-brand-pink));
+  background-image: linear-gradient(90deg, #9c2f66, var(--color-brand-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* The landing's entrance: a short rise and fade. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
 }
 
 /* Map pins (components/map): CSS-only, so no marker images to bundle. */

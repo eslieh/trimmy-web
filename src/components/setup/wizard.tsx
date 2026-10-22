@@ -26,8 +26,8 @@ import { SETUP_STEPS, nextStep, previousStep, type SetupStepKey } from './steps'
 export function SetupShell({ step, children }: { step: SetupStepKey | 'basics'; children: React.ReactNode }) {
   const index = SETUP_STEPS.findIndex((s) => s.key === step);
   return (
-    <div className="min-h-dvh bg-surface-2/60">
-      <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
+    <div className="min-h-dvh bg-ink/[0.02]">
+      <header className="sticky top-0 z-30 border-b border-ink/5 bg-white">
         <div className="mx-auto flex h-16 max-w-4xl items-center gap-4 px-4 sm:px-6">
           <Logo height={24} />
           <p className="hidden text-sm font-semibold text-ink-2 sm:block">Set up your business</p>
@@ -41,13 +41,13 @@ export function SetupShell({ step, children }: { step: SetupStepKey | 'basics'; 
               Step {index + 1} of {SETUP_STEPS.length}: {SETUP_STEPS[index]?.label}
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={1} aria-valuemax={SETUP_STEPS.length} aria-valuenow={index + 1}>
-            <div className="h-full rounded-full bg-brand-gradient transition-all" style={{ width: `${((index + 1) / SETUP_STEPS.length) * 100}%` }} />
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-valuemin={1} aria-valuemax={SETUP_STEPS.length} aria-valuenow={index + 1}>
+            <div className="h-full rounded-full bg-brand-pink transition-all" style={{ width: `${((index + 1) / SETUP_STEPS.length) * 100}%` }} />
           </div>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        <div className="rounded-sheet border border-line bg-white p-5 shadow-card sm:p-8">{children}</div>
+        <div className="rounded-sheet bg-white p-5 shadow-card ring-1 ring-ink/5 sm:p-8">{children}</div>
       </main>
     </div>
   );

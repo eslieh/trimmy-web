@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Avatar, Badge } from '@/components/ui/misc';
-import { relativeTime } from '@/lib/format';
+import { Avatar, Eyebrow } from '@/components/ui/misc';
+import { ButtonLink, buttonClass } from '@/components/ui/button';
+import { money, relativeTime } from '@/lib/format';
 import { getProfile } from '@/components/customer/data';
 import { Gallery } from '@/components/customer/business/gallery';
 import { CartPanel, ServiceMenu } from '@/components/customer/business/service-menu';
 import { FavoriteButton, FavoritesProvider } from '@/components/customer/explore/favorites';
-import { PinIcon, StarIcon, Stars } from '@/components/customer/icons';
+import { PinIcon, Stars } from '@/components/customer/icons';
 import { DAYS, categoryLabel, dayName, hoursLabel, mapsUrl, openNow } from '@/components/customer/labels';
 import type { BusinessProfile } from '@/types/discovery';
 import { BusinessLocationMap } from '@/components/customer/business/location-map';
+import { TeamList } from '@/components/customer/business/team';
 
 export async function generateMetadata({ params }: PageProps<'/b/[businessId]'>): Promise<Metadata> {
   const profile = await getProfile((await params).businessId).catch(() => null);
@@ -25,92 +27,99 @@ export async function generateMetadata({ params }: PageProps<'/b/[businessId]'>)
 }
 
 // A business's public profile: rendered on the server (search engines read
-// it); the gallery, service menu and cart are client islands.
+// it); the gallery, service menu and cart are client islands. Laid out in the
+// landing's style: dot labels, tinted tiles, whitespace instead of rules.
 export default async function BusinessPage({ params }: PageProps<'/b/[businessId]'>) {
   const { businessId } = await params;
   const profile = await getProfile(businessId);
   if (!profile) notFound();
   const { open, today } = openNow(profile.workingHours, new Date());
   const hasHours = DAYS.some((d) => profile.workingHours[d]);
+  const cheapest = profile.services.reduce<BusinessProfile['services'][number] | null>(
+    (min, s) => (!min || s.price.amount < min.price.amount ? s : min),
+    null,
+  );
 
   return (
     <FavoritesProvider>
       <JsonLd profile={profile} />
-      <div className="flex flex-col gap-6 pb-24 lg:pb-0">
-        <header className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-8 pb-24 lg:pb-0">
+        <header className="flex flex-wrap items-end justify-between gap-6 animate-fade-in">
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{profile.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]">
-              {profile.reviewCount > 0 ? (
-                <a href="#reviews" className="flex items-center gap-1 font-semibold hover:underline">
-                  <StarIcon className="size-4" />
-                  {profile.rating.toFixed(1)} <span className="font-normal text-ink-2">· {profile.reviewCount} reviews</span>
-                </a>
-              ) : (
-                <span className="font-semibold text-brand">New on Trimmy</span>
-              )}
-              <span className="text-ink-3" aria-hidden>·</span>
-              <span className="text-ink-2">{profile.categories.map(categoryLabel).join(' · ')}</span>
-              {hasHours ? (
-                <>
-                  <span className="text-ink-3" aria-hidden>·</span>
-                  <Badge tone={open ? 'success' : 'neutral'}>{open ? 'Open now' : 'Closed now'}</Badge>
-                </>
-              ) : null}
-            </div>
-            <a href={mapsUrl(profile.lat, profile.lng, profile.address)} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[15px] text-ink-2 underline-offset-2 hover:underline">
+            {profile.categories.length ? <Eyebrow>{profile.categories.map(categoryLabel).join(' · ')}</Eyebrow> : null}
+            <h1 className="mt-3 text-4xl leading-[1.1] font-bold tracking-tight sm:text-5xl">{profile.name}</h1>
+            <a
+              href={mapsUrl(profile.lat, profile.lng, profile.address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-ink-2 underline-offset-2 hover:text-ink hover:underline"
+            >
               <PinIcon /> {profile.address}
             </a>
           </div>
-          <FavoriteButton businessId={profile.businessId} name={profile.name} className="border border-line" />
+          <div className="flex items-center gap-3">
+            <FavoriteButton businessId={profile.businessId} name={profile.name} className="ring-1 ring-ink/10" />
+            {/* Phones have the cart bar's button instead. */}
+            <div className="hidden lg:block">
+              <ButtonLink href={`/b/${profile.businessId}/book`} variant="brand" arrow>
+                Book now
+              </ButtonLink>
+            </div>
+          </div>
         </header>
 
         <Gallery name={profile.name} photos={profile.photos} />
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14">
-          <div className="flex min-w-0 flex-col gap-10">
+        {/* Quick facts, in the landing's big-number indicator style. */}
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Fact
+            stat={profile.reviewCount > 0 ? profile.rating.toFixed(1) : 'New'}
+            caption={profile.reviewCount > 0 ? `${profile.reviewCount === 1 ? '1 review' : `${profile.reviewCount} reviews`}` : 'No reviews yet'}
+            href={profile.reviewCount > 0 ? '#reviews' : undefined}
+          />
+          <Fact
+            stat={String(profile.services.length)}
+            caption={cheapest ? `Services, from ${money(cheapest.price)}` : 'Services'}
+            href="#services"
+          />
+          {hasHours ? (
+            <Fact stat={open ? 'Open' : 'Closed'} caption={`Today · ${hoursLabel(profile.workingHours[today])}`} tone={open ? 'success' : undefined} />
+          ) : null}
+          {profile.staff.length ? <Fact stat={String(profile.staff.length)} caption={profile.staff.length === 1 ? 'Professional' : 'Professionals'} /> : null}
+        </ul>
+
+        <div className="mt-4 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14">
+          <div className="flex min-w-0 flex-col gap-16">
             {profile.description ? (
-              <Section title="About">
-                <p className="whitespace-pre-line leading-relaxed text-ink">{profile.description}</p>
+              <Section label="About">
+                <p className="text-xl leading-relaxed tracking-tight whitespace-pre-line sm:text-2xl sm:leading-snug">{profile.description}</p>
               </Section>
             ) : null}
 
-            <Section title="Services" id="services">
+            <Section label="Services" id="services">
               <ServiceMenu businessId={profile.businessId} services={profile.services} />
             </Section>
 
             {profile.staff.length ? (
-              <Section title="Team">
-                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {profile.staff.map((s) => (
-                    <li key={s.staffId} className="flex gap-3 rounded-card border border-line p-4">
-                      <Avatar name={s.name} src={s.avatarUrl} size={52} />
-                      <div className="min-w-0">
-                        <p className="font-bold">{s.name}</p>
-                        <p className="text-sm capitalize text-ink-2">
-                          {s.role.replace(/_/g, ' ')}
-                          {s.rating > 0 ? (
-                            <span className="ml-2 inline-flex items-center gap-0.5 font-semibold text-ink normal-case">
-                              <StarIcon className="size-3" /> {s.rating.toFixed(1)}
-                            </span>
-                          ) : null}
-                        </p>
-                        {s.specialties.length ? <p className="mt-1 line-clamp-2 text-sm text-ink-2">{s.specialties.join(' · ')}</p> : null}
-                        {s.bio ? <p className="mt-1 line-clamp-3 text-sm">{s.bio}</p> : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+              <Section label="Team">
+                <TeamList businessId={profile.businessId} staff={profile.staff} services={profile.services} />
               </Section>
             ) : null}
 
-            <Section title={profile.reviewCount ? `Reviews · ${profile.rating.toFixed(1)} (${profile.reviewCount})` : 'Reviews'} id="reviews">
+            <Section label="Reviews" id="reviews">
               {profile.reviews.length ? (
                 <>
+                  <div className="mb-6 flex items-end gap-4">
+                    <p className="text-5xl font-bold text-brand">{profile.rating.toFixed(1)}</p>
+                    <div className="pb-1.5">
+                      <Stars rating={profile.rating} />
+                      <p className="text-sm text-ink-2">{profile.reviewCount === 1 ? '1 review' : `${profile.reviewCount} reviews`}</p>
+                    </div>
+                  </div>
                   <ReviewList reviews={profile.reviews.slice(0, 6)} />
                   {profile.reviews.length > 6 ? (
                     <details className="mt-6">
-                      <summary className="cursor-pointer font-semibold underline">Show all {profile.reviews.length} reviews</summary>
+                      <summary className={buttonClass('secondary', 'sm', 'cursor-pointer list-none')}>Show all {profile.reviews.length} reviews</summary>
                       <div className="mt-6">
                         <ReviewList reviews={profile.reviews.slice(6)} />
                       </div>
@@ -118,16 +127,16 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
                   ) : null}
                 </>
               ) : (
-                <p className="text-ink-2">No reviews yet. Reviews come from customers after a completed visit.</p>
+                <p className="rounded-3xl bg-ink/[0.03] p-6 text-ink-2">No reviews yet. Reviews come from customers after a completed visit.</p>
               )}
             </Section>
 
             {profile.amenities.length ? (
-              <Section title="Amenities">
-                <ul className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+              <Section label="Amenities">
+                <ul className="flex flex-wrap gap-2">
                   {profile.amenities.map((a) => (
-                    <li key={a} className="flex items-center gap-2">
-                      <span className="size-1.5 rounded-full bg-brand" aria-hidden />
+                    <li key={a} className="flex items-center gap-2 rounded-full bg-ink/[0.04] px-4 py-2 text-sm font-medium">
+                      <span className="size-1.5 rounded-full bg-brand-pink" aria-hidden />
                       {a}
                     </li>
                   ))}
@@ -135,37 +144,39 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
               </Section>
             ) : null}
 
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-              <Section title="Opening hours">
+            <div className="grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-8">
+              <Section label="Opening hours">
                 {hasHours ? (
-                  <dl className="flex flex-col gap-1.5">
+                  <dl className="flex flex-col gap-1 rounded-3xl bg-ink/[0.03] p-3">
                     {DAYS.map((d) => (
-                      <div key={d} className={`flex justify-between gap-4 ${d === today ? 'font-bold' : ''}`}>
+                      <div key={d} className={`flex justify-between gap-4 rounded-2xl px-3 py-2 ${d === today ? 'bg-accent-soft font-semibold text-accent-foreground' : ''}`}>
                         <dt>{dayName(d)}</dt>
-                        <dd className={profile.workingHours[d] ? '' : 'text-ink-2'}>{hoursLabel(profile.workingHours[d])}</dd>
+                        <dd className={profile.workingHours[d] || d === today ? '' : 'text-ink-3'}>{hoursLabel(profile.workingHours[d])}</dd>
                       </div>
                     ))}
                   </dl>
                 ) : (
-                  <p className="text-ink-2">Hours not listed. Available times show when you book.</p>
+                  <p className="rounded-3xl bg-ink/[0.03] p-6 text-ink-2">Hours not listed. Available times show when you book.</p>
                 )}
               </Section>
-              <Section title="Location">
-                <p>{profile.address}</p>
-                <BusinessLocationMap lat={profile.lat} lng={profile.lng} name={profile.name} />
+              <Section label="Location">
+                <p className="text-ink-2">{profile.address}</p>
+                <div className="overflow-hidden rounded-3xl">
+                  <BusinessLocationMap lat={profile.lat} lng={profile.lng} name={profile.name} />
+                </div>
                 <a
                   href={mapsUrl(profile.lat, profile.lng, profile.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-line-2 px-4 py-2 text-sm font-semibold hover:border-ink"
+                  className={buttonClass('secondary', 'sm', 'mt-4')}
                 >
                   <PinIcon /> Open in Google Maps
                 </a>
               </Section>
             </div>
 
-            <Section title="Policies">
-              <ul className="flex flex-col gap-3">
+            <Section label="Policies">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Policy title="Deposit">{profile.depositSummary}</Policy>
                 <Policy title="Cancellation">{profile.cancellationSummary}</Policy>
                 <Policy title="No-shows">
@@ -186,10 +197,24 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
   );
 }
 
-function Section({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
+function Fact({ stat, caption, href, tone }: { stat: string; caption: string; href?: string; tone?: 'success' }) {
+  const body = (
+    <>
+      <p className={`text-3xl font-bold tracking-tight sm:text-4xl ${tone === 'success' ? 'text-success' : 'text-brand'}`}>{stat}</p>
+      <p className="mt-1 text-sm text-ink-2">{caption}</p>
+    </>
+  );
+  const tile = 'block h-full rounded-3xl bg-ink/[0.03] p-5 transition-colors';
+  return <li>{href ? <a href={href} className={`${tile} hover:bg-accent-soft/60`}>{body}</a> : <div className={tile}>{body}</div>}</li>;
+}
+
+// The landing's section shape: a dot label as the heading, then the content.
+function Section({ label, id, children }: { label: string; id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={id ? `${id}-h` : undefined} className="scroll-mt-24 border-t border-line pt-8 first:border-t-0 first:pt-0">
-      <h2 id={id ? `${id}-h` : undefined} className="mb-4 text-xl font-bold">{title}</h2>
+    <section id={id} aria-labelledby={id ? `${id}-h` : undefined} className="scroll-mt-24">
+      <h2 id={id ? `${id}-h` : undefined} className="mb-5">
+        <Eyebrow>{label}</Eyebrow>
+      </h2>
       {children}
     </section>
   );
@@ -197,18 +222,18 @@ function Section({ title, id, children }: { title: string; id?: string; children
 
 function Policy({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <li className="rounded-xl bg-surface-2 p-4">
-      <p className="font-semibold">{title}</p>
-      <p className="mt-0.5 text-[15px] text-ink-2">{children}</p>
+    <li className="rounded-3xl bg-ink/[0.03] p-5">
+      <p className="text-sm font-semibold tracking-wide uppercase">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-ink-2">{children}</p>
     </li>
   );
 }
 
 function ReviewList({ reviews }: { reviews: BusinessProfile['reviews'] }) {
   return (
-    <ul className="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {reviews.map((r) => (
-        <li key={r.reviewId}>
+        <li key={r.reviewId} className="rounded-3xl bg-ink/[0.03] p-5">
           <div className="flex items-center gap-3">
             <Avatar name={r.authorName} size={40} />
             <div>
@@ -219,7 +244,7 @@ function ReviewList({ reviews }: { reviews: BusinessProfile['reviews'] }) {
           <div className="mt-2">
             <Stars rating={r.rating} className="size-3.5" />
           </div>
-          {r.text ? <p className="mt-1.5 leading-relaxed">{r.text}</p> : null}
+          {r.text ? <p className="mt-2 leading-relaxed">{r.text}</p> : null}
         </li>
       ))}
     </ul>

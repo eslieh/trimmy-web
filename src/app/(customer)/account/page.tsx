@@ -65,7 +65,7 @@ export default async function AccountPage() {
           <>
             <p className="font-bold">Run a salon or barbershop?</p>
             <p className="mt-1 text-ink-2">
-              Take bookings and M-Pesa deposits with Trimmy. <Link href="/for-business" className="font-semibold text-ink underline">Learn more</Link>
+              Take bookings and M-Pesa deposits with Trimmy. <Link href="/setup" className="font-semibold text-ink underline">List your business</Link>
             </p>
           </>
         )}

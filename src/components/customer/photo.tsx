@@ -10,8 +10,8 @@ export function Photo({
 }: { src: string | null | undefined; alt: string; sizes: string; priority?: boolean; className?: string; name?: string }) {
   if (!src) {
     return (
-      <div className={cx('absolute inset-0 grid place-items-center bg-gradient-to-br from-brand/10 to-brand-pink/10', className)} aria-hidden>
-        <span className="text-4xl font-extrabold text-brand/40">{(name ?? alt).trim()[0]?.toUpperCase() ?? ''}</span>
+      <div className={cx('absolute inset-0 grid place-items-center bg-gradient-to-br from-accent-soft to-accent/50', className)} aria-hidden>
+        <span className="text-5xl font-bold tracking-tight text-brand/50">{(name ?? alt).trim()[0]?.toUpperCase() ?? ''}</span>
       </div>
     );
   }

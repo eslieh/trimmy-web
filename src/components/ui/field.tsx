@@ -1,9 +1,10 @@
 import { forwardRef, useId } from 'react';
 import { cx } from '@/lib/format';
 
-// Labelled form fields with the app's look: grey border, black on focus.
+// Labelled form fields with the app's look: grey border, ink and a soft pink
+// halo on focus.
 const control =
-  'w-full rounded-xl border border-line-2 bg-white px-4 py-3 text-[15px] text-ink placeholder:text-ink-3 outline-none transition-colors focus:border-ink disabled:bg-surface-2 disabled:text-ink-3';
+  'w-full rounded-xl border border-line-2 bg-white px-4 py-3 text-[15px] text-ink placeholder:text-ink-3 outline-none transition focus:border-ink focus:ring-4 focus:ring-accent-soft disabled:bg-surface-2 disabled:text-ink-3';
 
 type FieldShell = { label?: string; hint?: string; error?: string; className?: string };
 
