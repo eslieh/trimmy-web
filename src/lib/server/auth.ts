@@ -24,7 +24,9 @@ export const getSession = cache(async (): Promise<Session | null> => {
         .then((r) => r.businesses)
         .catch(() => [] as MyBusiness[]),
     ]);
-    const workplaces = businesses.filter((b) => b.role === 'owner' || b.role === 'front_desk');
+    // The web is for running the business: owners, and anyone with front desk access
+    // (desk-only, or staff who also run the desk).
+    const workplaces = businesses.filter((b) => b.role === 'owner' || b.role === 'front_desk' || b.frontDeskAccess);
     return { user, workplaces };
   } catch {
     return null;

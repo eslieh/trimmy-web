@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/server/auth';
-import { Avatar, PageHeader } from '@/components/ui/misc';
+import { PageHeader } from '@/components/ui/misc';
+import { PhotoForm } from '@/components/customer/account/photo-form';
 import { SignOutButton } from '@/components/customer/account/account-forms';
 import { ChevronRightIcon } from '@/components/customer/icons';
 import { fullName } from '@/components/customer/labels';
@@ -24,12 +25,11 @@ export default async function AccountPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Account" />
       <div className="mb-8 flex items-center gap-4 rounded-card border border-line p-5">
-        <Avatar name={name} size={64} />
-        <div className="min-w-0">
+        <PhotoForm user={user} name={name}>
           <p className="truncate text-xl font-bold">{name}</p>
           <p className="truncate text-ink-2">{user.email ?? user.phone}</p>
           {user.email && user.phone ? <p className="truncate text-sm text-ink-2">{user.phone}</p> : null}
-        </div>
+        </PhotoForm>
       </div>
 
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -56,7 +56,7 @@ export default async function AccountPage() {
                   <Link href={`/work/${w.businessId}`} className="font-semibold text-brand hover:underline">
                     {w.name}
                   </Link>
-                  <span className="ml-2 text-sm text-ink-2">{w.role === 'owner' ? 'Owner' : 'Front desk'}</span>
+                  <span className="ml-2 text-sm text-ink-2">{w.role === 'owner' ? 'Owner' : (w.role === 'staff' ? 'Staff + front desk' : 'Front desk')}</span>
                 </li>
               ))}
             </ul>

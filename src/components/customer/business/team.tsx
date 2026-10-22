@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { ButtonArrow, buttonClass } from '@/components/ui/button';
+import { Lightbox } from '@/components/ui/lightbox';
 import { Avatar, Tabs } from '@/components/ui/misc';
 import { Modal } from '@/components/ui/modal';
 import { cx, money } from '@/lib/format';
 import type { BusinessProfileService, BusinessProfileStaffMember } from '@/types/discovery';
-import { CheckIcon, ChevronLeftIcon, StarIcon } from '../icons';
+import { CheckIcon, StarIcon } from '../icons';
 import { useCart } from '../hooks';
 import { DAYS, dayName, minutesLabel } from '../labels';
 import { Photo } from '../photo';
@@ -54,22 +55,19 @@ export function TeamList({ businessId, staff, services }: { businessId: string; 
   );
 }
 
+// Customers see the person (rating, what they're good at), never their role in the app.
 function RoleLine({ member }: { member: Member }) {
+  if (member.rating <= 0) return null;
   return (
-    <p className="text-sm text-ink-2 capitalize">
-      {member.role.replace(/_/g, ' ')}
-      {member.rating > 0 ? (
-        <span className="ml-2 inline-flex items-center gap-0.5 font-semibold text-ink normal-case">
-          <StarIcon className="size-3 text-brand-pink" /> {member.rating.toFixed(1)}
-        </span>
-      ) : null}
+    <p className="inline-flex items-center gap-0.5 text-sm font-semibold">
+      <StarIcon className="size-3 text-brand-pink" /> {member.rating.toFixed(1)}
     </p>
   );
 }
 
 function MemberSheet({ businessId, member, services, onClose }: { businessId: string; member: Member; services: BusinessProfileService[]; onClose: () => void }) {
   const [tab, setTab] = useState<'profile' | 'portfolio'>('profile');
-  const [photo, setPhoto] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<number | null>(null);
   const { ids, toggle } = useCart(businessId);
   const theirs = member.allServices ? services : services.filter((s) => member.serviceIds.includes(s.serviceId));
   const groups = new Map<string, BusinessProfileService[]>();
@@ -103,10 +101,7 @@ function MemberSheet({ businessId, member, services, onClose }: { businessId: st
 
         <Tabs
           value={tab}
-          onChange={(t) => {
-            setTab(t);
-            setPhoto(null);
-          }}
+          onChange={setTab}
           options={[
             { key: 'profile', label: 'Profile' },
             { key: 'portfolio', label: 'Portfolio', badge: member.portfolio.length || undefined },
@@ -171,34 +166,13 @@ function MemberSheet({ businessId, member, services, onClose }: { businessId: st
               )}
             </div>
           </div>
-        ) : photo !== null ? (
-          // One photo, large, with previous / next.
-          <div className="flex flex-col gap-3 animate-fade-in">
-            <button type="button" onClick={() => setPhoto(null)} className="inline-flex items-center gap-1 self-start text-sm font-semibold text-ink-2 hover:text-ink">
-              <ChevronLeftIcon className="size-4" /> All photos
-            </button>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-surface-3">
-              <Photo src={member.portfolio[photo]} alt={`${member.name}'s work, photo ${photo + 1}`} sizes="(min-width: 640px) 640px, 100vw" />
-            </div>
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <button type="button" disabled={photo === 0} onClick={() => setPhoto(photo - 1)} className={buttonClass('secondary', 'sm')}>
-                Previous
-              </button>
-              <span className="text-ink-2">
-                {photo + 1} / {member.portfolio.length}
-              </span>
-              <button type="button" disabled={photo === member.portfolio.length - 1} onClick={() => setPhoto(photo + 1)} className={buttonClass('secondary', 'sm')}>
-                Next
-              </button>
-            </div>
-          </div>
         ) : member.portfolio.length ? (
           <ul className="grid grid-cols-2 gap-2 animate-fade-in sm:grid-cols-3">
             {member.portfolio.map((src, i) => (
               <li key={src + i}>
                 <button
                   type="button"
-                  onClick={() => setPhoto(i)}
+                  onClick={() => setViewing(i)}
                   aria-label={`Open photo ${i + 1} of ${member.portfolio.length}`}
                   className="relative block aspect-square w-full overflow-hidden rounded-2xl bg-surface-3"
                 >
@@ -211,6 +185,7 @@ function MemberSheet({ businessId, member, services, onClose }: { businessId: st
           <p className="rounded-3xl bg-ink/[0.03] p-6 text-ink-2">No portfolio photos yet.</p>
         )}
       </div>
+      <Lightbox images={member.portfolio} index={viewing} onClose={() => setViewing(null)} label={`${member.name}'s work`} />
     </Modal>
   );
 }

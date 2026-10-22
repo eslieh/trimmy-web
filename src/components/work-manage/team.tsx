@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input, Select } from '@/components/ui/field';
+import { Input, Select, Switch } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
 import { Avatar, Badge, Card, EmptyState, PageHeader } from '@/components/ui/misc';
 import { toast } from '@/components/ui/toast';
@@ -18,14 +18,19 @@ import {
   ErrorBlock, INVITE_STATUS, Loading, ROLE_LABEL, SectionTitle, Table, WorkingDaysPicker, digitsOnly, td, th, workingDaysLabel,
   type Weekday,
 } from './shared';
+import { PortfolioPanel } from './portfolio';
 import { useApi } from './use-api';
 
 export function memberName(m: TeamInvitation): string {
   return m.name || m.email || m.phone || 'Unnamed';
 }
 
+export function roleLabel(m: TeamInvitation): string {
+  return m.role === 'staff' && m.frontDeskAccess ? 'Staff + front desk' : ROLE_LABEL[m.role];
+}
+
 export function TeamRoster() {
-  const { businessId } = useWork();
+  const { businessId, staffId: myStaffId } = useWork();
   const { data, error, loading, reload } = useApi<{ members: TeamInvitation[] }>(`/businesses/${businessId}/team/members`);
   const [inviting, setInviting] = useState(false);
 
@@ -66,6 +71,8 @@ export function TeamRoster() {
                   <MemberTable members={pending} />
                 </Card>
               ) : null}
+              {/* An owner who takes clients is on the profile too. */}
+              {myStaffId ? <PortfolioPanel staffId={myStaffId} /> : null}
             </>
           )}
         </div>
@@ -96,7 +103,7 @@ function MemberTable({ members }: { members: TeamInvitation[] }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{memberName(m)}</p>
                 <p className="truncate text-sm text-ink-2">
-                  {ROLE_LABEL[m.role]} · {m.commissionPercent}% · {workingDaysLabel(m.workingDays)}
+                  {roleLabel(m)}{m.commissionPercent === null ? '' : ` · ${m.commissionPercent}%`} · {workingDaysLabel(m.workingDays)}
                 </p>
               </div>
               <Badge tone={INVITE_STATUS[m.status].tone}>{INVITE_STATUS[m.status].label}</Badge>
@@ -127,8 +134,8 @@ function MemberTable({ members }: { members: TeamInvitation[] }) {
                   </span>
                 </Link>
               </td>
-              <td className={td}>{ROLE_LABEL[m.role]}</td>
-              <td className={`${td} tabular-nums`}>{m.commissionPercent}%</td>
+              <td className={td}>{roleLabel(m)}</td>
+              <td className={`${td} tabular-nums`}>{m.commissionPercent === null ? '—' : `${m.commissionPercent}%`}</td>
               <td className={`${td} text-ink-2`}>{workingDaysLabel(m.workingDays)}</td>
               <td className={td}>
                 <Badge tone={INVITE_STATUS[m.status].tone}>{INVITE_STATUS[m.status].label}</Badge>
@@ -191,7 +198,7 @@ export function PayoutsWaiting() {
   );
 }
 
-const EMPTY_FORM = { name: '', contact: 'phone' as 'phone' | 'email', phone: '', email: '', role: 'staff' as TeamRole, commission: '40' };
+const EMPTY_FORM = { name: '', contact: 'phone' as 'phone' | 'email', phone: '', email: '', role: 'staff' as TeamRole, commission: '40', alsoDesk: false };
 
 export function InviteModal({ open, onClose, onInvited }: { open: boolean; onClose: () => void; onInvited: (m: TeamInvitation) => void }) {
   const { businessId } = useWork();
@@ -208,7 +215,7 @@ export function InviteModal({ open, onClose, onInvited }: { open: boolean; onClo
     if (form.contact === 'phone' && !/^\+?\d{9,15}$/.test(form.phone.replace(/\s/g, ''))) next.phone = 'Enter a phone number, e.g. 0712 345 678.';
     if (form.contact === 'email' && !/^\S+@\S+\.\S+$/.test(form.email.trim())) next.email = 'Enter an email address.';
     const commission = Number(form.commission);
-    if (form.commission === '' || commission > 100) next.commission = 'Between 0 and 100.';
+    if (form.role === 'staff' && (form.commission === '' || commission > 100)) next.commission = 'Between 0 and 100.';
     if (days && !days.length) next.days = 'Pick at least one day, or let them work whenever you are open.';
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -216,7 +223,8 @@ export function InviteModal({ open, onClose, onInvited }: { open: boolean; onClo
     const input: AddTeamMemberInput = {
       name: form.name.trim(),
       role: form.role,
-      commissionPercent: commission,
+      // Front desk performs no services: no commission.
+      ...(form.role === 'staff' ? { commissionPercent: commission, frontDeskAccess: form.alsoDesk } : {}),
       workingDays: days,
       ...(form.contact === 'phone' ? { phone: form.phone.replace(/\s/g, '') } : { email: form.email.trim() }),
     };
@@ -280,8 +288,21 @@ export function InviteModal({ open, onClose, onInvited }: { open: boolean; onClo
             <option value="staff">Staff</option>
             <option value="front_desk">Front desk</option>
           </Select>
-          <Input label="Commission %" inputMode="numeric" value={form.commission} onChange={(e) => set('commission', digitsOnly(e.target.value, 3))} error={errors.commission} hint="Their share of each paid booking." />
+          {form.role === 'staff' ? (
+            <Input label="Commission %" inputMode="numeric" value={form.commission} onChange={(e) => set('commission', digitsOnly(e.target.value, 3))} error={errors.commission} hint="Their share of each paid booking." />
+          ) : (
+            <p className="self-center text-sm text-ink-2">No commission: front desk doesn&apos;t perform services.</p>
+          )}
         </div>
+        {form.role === 'staff' ? (
+          <div className="flex items-center justify-between gap-4 rounded-2xl bg-ink/[0.03] p-4">
+            <div>
+              <p className="font-semibold">Also runs the front desk</p>
+              <p className="text-sm text-ink-2">They can switch to the desk to check customers in and out. Commission stays on their own services.</p>
+            </div>
+            <Switch checked={form.alsoDesk} onChange={(v) => set('alsoDesk', v)} label="Also runs the front desk" />
+          </div>
+        ) : null}
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold">Working days</p>
           <WorkingDaysPicker value={days} onChange={setDays} />

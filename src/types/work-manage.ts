@@ -130,7 +130,9 @@ export type AddTeamMemberInput = {
   email?: string;
   phone?: string;
   role: TeamRole;
-  commissionPercent: number;
+  // Staff only; left out for front desk.
+  commissionPercent?: number;
+  frontDeskAccess?: boolean;
   workingDays: (keyof WeeklyHours)[] | null;
 };
 

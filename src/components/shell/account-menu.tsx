@@ -25,7 +25,7 @@ export function AccountMenu() {
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} className="flex items-center gap-2 rounded-full border border-line p-1 pr-3 hover:shadow-card">
-        <Avatar name={name} size={30} />
+        <Avatar name={name} src={session.user.avatar_url} size={30} />
         <span className="hidden max-w-32 truncate text-sm font-semibold sm:inline">{name}</span>
       </button>
       {open ? (
@@ -46,7 +46,7 @@ export function AccountMenu() {
             >
               {w.name}
               <span className="ml-1 text-xs text-ink-3">
-                {w.role === 'owner' ? (w.status === 'published' ? 'Owner' : 'Setup in progress') : 'Front desk'}
+                {w.role === 'owner' ? (w.status === 'published' ? 'Owner' : 'Setup in progress') : (w.role === 'staff' ? 'Staff + front desk' : 'Front desk')}
               </span>
             </Link>
           ))}

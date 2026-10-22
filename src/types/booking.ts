@@ -52,6 +52,8 @@ export type Booking = {
   depositAmount: Money | null; // null when the business requires no deposit
   status: BookingStatus;
   source: BookingSource;
+  // Set when this booking is one part of a multi-staff visit (GET /visits/{visitId}).
+  visitId?: string | null;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod | null; // null until charged
   paymentReference: string | null; // M-Pesa receipt number once paid via mpesa; cash has no reference, stays null

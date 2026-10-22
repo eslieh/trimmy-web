@@ -381,7 +381,7 @@ export function BookingFlow({
                   setChoice(null);
                 }}
                 title={s.name}
-                subtitle={s.role.replace(/_/g, ' ')}
+                subtitle={s.specialties.slice(0, 2).join(', ') || 'Professional'}
                 rating={s.rating}
                 avatar={<Avatar name={s.name} src={s.avatarUrl} size={44} />}
               />

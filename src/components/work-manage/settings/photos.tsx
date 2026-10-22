@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Button, Spinner } from '@/components/ui/button';
+import { Lightbox } from '@/components/ui/lightbox';
 import { Badge, EmptyState } from '@/components/ui/misc';
 import { toast } from '@/components/ui/toast';
 import { useWork } from '@/components/work/context';
@@ -29,6 +30,7 @@ function Photos({ business, reload }: { business: BusinessDetail; reload: () => 
   const [asCover, setAsCover] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [removing, setRemoving] = useState<BusinessPhoto | null>(null);
+  const [viewing, setViewing] = useState<number | null>(null);
   // Cover first, then the order they were added.
   const photos = [...(business.photos ?? [])].sort((a, b) => Number(b.isCover) - Number(a.isCover));
 
@@ -101,9 +103,11 @@ function Photos({ business, reload }: { business: BusinessDetail; reload: () => 
         <EmptyState title="No photos yet" body="Businesses with photos get far more bookings. Your first photo becomes the cover." action={<Button onClick={() => pick(false)}>Add photos</Button>} />
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {photos.map((p) => (
+          {photos.map((p, i) => (
             <li key={p.photoId} className="group relative aspect-[4/3] overflow-hidden rounded-card bg-surface-3">
-              <Image src={p.url} alt={p.isCover ? 'Cover photo' : 'Business photo'} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw" className="object-cover" unoptimized />
+              <button type="button" onClick={() => setViewing(i)} className="absolute inset-0" aria-label={`View photo ${i + 1} of ${photos.length}`}>
+                <Image src={p.url} alt={p.isCover ? 'Cover photo' : 'Business photo'} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw" className="object-cover" unoptimized />
+              </button>
               {p.isCover ? (
                 <span className="absolute top-2 left-2">
                   <Badge tone="brand">Cover</Badge>
@@ -125,6 +129,7 @@ function Photos({ business, reload }: { business: BusinessDetail; reload: () => 
           ))}
         </ul>
       )}
+      <Lightbox images={photos.map((p) => p.url)} index={viewing} onClose={() => setViewing(null)} label="Business photos" />
       <ConfirmModal
         open={!!removing}
         onClose={() => setRemoving(null)}

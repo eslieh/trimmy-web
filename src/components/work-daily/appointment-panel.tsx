@@ -17,6 +17,8 @@ import { useBusinessClock } from './hooks';
 import { durationLabel, toMinutes, toTime } from './time';
 import { useApi, useBookingEvents } from './use-api';
 import { useBusiness } from './use-business';
+import { AddServiceModal, VisitChargeModal, VisitParts } from './visit';
+import type { Visit } from '@/types/work-daily';
 
 const CANCEL_REASON: Record<string, string> = {
   business: 'by the business',
@@ -24,7 +26,7 @@ const CANCEL_REASON: Record<string, string> = {
   payment_expired: 'because the deposit wasn’t paid in time',
 };
 
-type Dialog = 'charge' | 'assign' | 'reschedule' | 'refund' | 'cancel' | null;
+type Dialog = 'charge' | 'assign' | 'reschedule' | 'refund' | 'cancel' | 'add-service' | null;
 
 // One appointment, everything the desk does with it: contact, services and
 // money (deposit, payment, tip, fees, refunds), status (check in, done,
@@ -42,7 +44,13 @@ export function AppointmentPanel({
   const { businessId } = useWork();
   const { business } = useBusiness();
   const { data: booking, error, reload, setData } = useApi<Booking>(`/bookings/${bookingId}`);
-  useBookingEvents(reload);
+  // The rest of the visit, when this booking is one part of a multi-staff visit.
+  const visitPath = booking?.visitId ? `/visits/${booking.visitId}` : null;
+  const { data: visit, reload: reloadVisit, setData: setVisit } = useApi<Visit>(visitPath);
+  useBookingEvents(() => {
+    reload();
+    if (visitPath) reloadVisit();
+  });
   const [dialog, setDialog] = useState<Dialog>(null);
   const [updating, setUpdating] = useState<BookingStatus | null>(null);
 
@@ -90,6 +98,15 @@ export function AppointmentPanel({
   const canReschedule = (b.status === 'confirmed' || b.status === 'pending_payment') && !started;
   const canCancel = b.status === 'confirmed' || b.status === 'pending_payment';
   const balance = balanceOf(b);
+  const canAddService = ['confirmed', 'in_progress', 'completed'].includes(b.status);
+  // In a visit, checkout takes the whole visit at once (one payment, tips split between the staff).
+  const inVisit = !!(b.visitId && visit);
+  const visitDue = inVisit && visit ? visit.balanceDue.amount : 0;
+  const onVisit = (v: Visit) => {
+    setVisit(() => v);
+    const mine = v.bookings.find((x) => x.bookingId === b.bookingId);
+    if (mine) apply(mine);
+  };
 
   return (
     <Shell
@@ -115,9 +132,18 @@ export function AppointmentPanel({
             Check in
           </Button>
         ) : null}
-        {needsCharge(b) ? (
+        {inVisit && visitDue > 0 ? (
+          <Button size="sm" variant="brand" onClick={() => setDialog('charge')}>
+            Check out visit {money(visitDue)}
+          </Button>
+        ) : !inVisit && needsCharge(b) ? (
           <Button size="sm" variant="brand" onClick={() => setDialog('charge')}>
             Charge {money(balance)}
+          </Button>
+        ) : null}
+        {canAddService ? (
+          <Button size="sm" variant="secondary" onClick={() => setDialog('add-service')}>
+            Add service
           </Button>
         ) : null}
         {b.status === 'in_progress' ? (
@@ -173,6 +199,12 @@ export function AppointmentPanel({
       >
         <p className={cx('font-semibold', !b.staffId && 'text-warning')}>{b.staffId ? b.staffName : 'Unassigned (any available)'}</p>
       </Section>
+
+      {inVisit && visit ? (
+        <Section title="This visit">
+          <VisitParts visit={visit} currentBookingId={b.bookingId} />
+        </Section>
+      ) : null}
 
       <Section title="Customer">
         <p className="font-semibold">{b.customerName}</p>
@@ -292,7 +324,14 @@ export function AppointmentPanel({
         </Section>
       ) : null}
 
-      <ChargeModal key={`charge-${b.bookingId}-${dialog === 'charge'}`} booking={b} open={dialog === 'charge'} onClose={() => setDialog(null)} onDone={apply} />
+      {inVisit && visit ? (
+        dialog === 'charge' ? <VisitChargeModal visit={visit} open onClose={() => setDialog(null)} onDone={onVisit} /> : null
+      ) : (
+        <ChargeModal key={`charge-${b.bookingId}-${dialog === 'charge'}`} booking={b} open={dialog === 'charge'} onClose={() => setDialog(null)} onDone={apply} />
+      )}
+      {dialog === 'add-service' ? (
+        <AddServiceModal booking={b} business={business} open onClose={() => setDialog(null)} onDone={onVisit} />
+      ) : null}
       <AssignModal booking={b} business={business} open={dialog === 'assign'} onClose={() => setDialog(null)} onDone={apply} />
       {dialog === 'reschedule' ? <RescheduleModal booking={b} today={now.date} open onClose={() => setDialog(null)} onDone={apply} /> : null}
       {dialog === 'refund' ? <RefundModal booking={b} open onClose={() => setDialog(null)} onDone={apply} /> : null}

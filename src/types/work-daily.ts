@@ -104,3 +104,21 @@ export type AppointmentPreset = {
   customerPhone?: string;
   customerEmail?: string;
 };
+
+// GET /visits/{visitId}: one customer's visit across several bookings (and staff),
+// checked out and tipped together.
+export type Visit = {
+  visitId: string;
+  businessId: string;
+  customerName: string;
+  customerPhone: string | null;
+  bookings: Booking[]; // soonest first; cancelled / no-show listed but not counted
+  staff: { staffId: string | null; staffName: string; subtotal: Money; balanceDue: Money; bookingIds: string[] }[];
+  total: Money;
+  depositPaid: Money;
+  balanceDue: Money;
+  paymentStatus: 'unpaid' | 'partially_paid' | 'paid';
+  chargeableBookingIds: string[];
+  notReady: { bookingId: string; status: string; staffName: string }[];
+  chargePayment: Booking['chargePayment'] | null;
+};

@@ -36,9 +36,13 @@ export type TeamInvitation = {
   name?: string;
   email?: string;
   phone?: string;
+  // 'staff' takes appointments; 'front_desk' runs the desk only.
   role: TeamRole;
   status: InvitationStatus;
-  commissionPercent: number;
+  // Null for front desk: they perform no services, so earn no commission.
+  commissionPercent: number | null;
+  // Staff who also run the front desk.
+  frontDeskAccess?: boolean;
   workingDays: (keyof WeeklyHours)[] | null; // null = follows the business's own working days
   sentAt: string;
 };

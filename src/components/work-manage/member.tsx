@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button, ButtonLink } from '@/components/ui/button';
-import { Input } from '@/components/ui/field';
+import { Input, Switch } from '@/components/ui/field';
 import { Avatar, Badge, Card, EmptyState } from '@/components/ui/misc';
 import { toast } from '@/components/ui/toast';
 import { useWork, workHref } from '@/components/work/context';
@@ -12,10 +12,11 @@ import { cx, money } from '@/lib/format';
 import type { TeamInvitation } from '@/types/team';
 import type { ServiceCategoryWithServices, StaffServices } from '@/types/work-manage';
 import {
-  BackLink, ConfirmModal, ErrorBlock, INVITE_STATUS, Loading, ROLE_LABEL, SectionTitle, WorkingDaysPicker, dateTimeLabel, digitsOnly,
+  BackLink, ConfirmModal, ErrorBlock, INVITE_STATUS, Loading, SectionTitle, WorkingDaysPicker, dateTimeLabel, digitsOnly,
   type Weekday,
 } from './shared';
-import { memberName } from './team';
+import { memberName, roleLabel } from './team';
+import { PortfolioPanel } from './portfolio';
 import { TimeOffPanel } from './time-off';
 import { useApi } from './use-api';
 import { WalletPanel } from './wallet';
@@ -54,7 +55,7 @@ export function MemberDetail({ memberId }: { memberId: string }) {
           <h1 className="truncate text-2xl font-extrabold tracking-tight sm:text-3xl">{name}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-ink-2">
             <Badge tone={INVITE_STATUS[member.status].tone}>{INVITE_STATUS[member.status].label}</Badge>
-            <span>{ROLE_LABEL[member.role]}</span>
+            <span>{roleLabel(member)}</span>
             {member.phone ? <span>· {member.phone}</span> : null}
             {member.email ? <span>· {member.email}</span> : null}
           </p>
@@ -93,6 +94,7 @@ export function MemberDetail({ memberId }: { memberId: string }) {
           <TimeOffPanel staffId={member.staffId} name={name} />
         </div>
       ) : null}
+      {member.staffId && member.role !== 'front_desk' ? <PortfolioPanel staffId={member.staffId} name={name} /> : null}
 
       <ConfirmModal
         open={removing}
@@ -121,20 +123,32 @@ export function MemberDetail({ memberId }: { memberId: string }) {
 
 function SettingsCard({ member, onSaved }: { member: TeamInvitation; onSaved: (m: TeamInvitation) => void }) {
   const { businessId } = useWork();
-  const [commission, setCommission] = useState(String(member.commissionPercent));
+  const wasTaking = member.role !== 'front_desk';
+  const hadDesk = member.role === 'front_desk' || !!member.frontDeskAccess;
+  const [takes, setTakes] = useState(wasTaking);
+  const [desk, setDesk] = useState(hadDesk);
+  const [commission, setCommission] = useState(String(member.commissionPercent ?? 40));
   const [days, setDays] = useState<Weekday[] | null>(member.workingDays);
   const [saving, setSaving] = useState(false);
   const value = Number(commission);
-  const commissionError = commission === '' || value > 100 ? 'Between 0 and 100.' : undefined;
+  // Front desk only: no commission to check. At least one of the two must stay on.
+  const commissionError = takes && (commission === '' || value > 100) ? 'Between 0 and 100.' : undefined;
+  const modesError = !takes && !desk ? 'Turn at least one on.' : undefined;
   const daysError = days && days.length === 0 ? 'Pick at least one day.' : undefined;
-  const changed = value !== member.commissionPercent || JSON.stringify(days) !== JSON.stringify(member.workingDays);
+  const modesChanged = takes !== wasTaking || desk !== hadDesk;
+  const changed =
+    modesChanged || (takes && value !== member.commissionPercent) || JSON.stringify(days) !== JSON.stringify(member.workingDays);
 
   const save = async () => {
     setSaving(true);
     try {
       const updated = await api<TeamInvitation>(`/businesses/${businessId}/team/members/${member.invitationId}`, {
         method: 'PATCH',
-        body: { commissionPercent: value, workingDays: days },
+        body: {
+          workingDays: days,
+          ...(modesChanged ? { takesAppointments: takes, frontDeskAccess: desk } : {}),
+          ...(takes ? { commissionPercent: value } : {}),
+        },
       });
       onSaved(updated);
       toast.success('Saved');
@@ -147,31 +161,56 @@ function SettingsCard({ member, onSaved }: { member: TeamInvitation; onSaved: (m
 
   return (
     <Card>
-      <SectionTitle title="Pay and schedule" />
+      <SectionTitle title="Role, pay and schedule" />
       <div className="flex flex-col gap-5">
-        <Input
-          label="Commission %"
-          inputMode="numeric"
-          value={commission}
-          onChange={(e) => setCommission(digitsOnly(e.target.value, 3))}
-          error={commissionError}
-          hint="Their share of each paid booking, fixed when the booking is paid."
-          className="max-w-56"
-        />
+        <div className="flex flex-col gap-2 rounded-2xl bg-ink/[0.03] p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Takes appointments</p>
+              <p className="text-sm text-ink-2">Bookable for services; earns commission on their own work.</p>
+            </div>
+            <Switch checked={takes} onChange={setTakes} label="Takes appointments" />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Runs the front desk</p>
+              <p className="text-sm text-ink-2">Checks customers in and out and takes payments. With both on, they switch between the two.</p>
+            </div>
+            <Switch checked={desk} onChange={setDesk} label="Runs the front desk" />
+          </div>
+          {modesError ? (
+            <p className="text-[13px] text-danger">{modesError}</p>
+          ) : !takes && wasTaking ? (
+            <p className="text-[13px] text-ink-2">Front desk only: their commission is removed. Reassign any upcoming appointments first.</p>
+          ) : null}
+        </div>
+        {takes ? (
+          <Input
+            label="Commission %"
+            inputMode="numeric"
+            value={commission}
+            onChange={(e) => setCommission(digitsOnly(e.target.value, 3))}
+            error={commissionError}
+            hint="Their share of each paid booking, fixed when the booking is paid."
+            className="max-w-56"
+          />
+        ) : null}
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold">Working days</p>
           <WorkingDaysPicker value={days} onChange={setDays} />
           {daysError ? <p className="text-[13px] text-danger">{daysError}</p> : null}
         </div>
         <div className="flex gap-2">
-          <Button onClick={save} loading={saving} disabled={!changed || !!commissionError || !!daysError}>
+          <Button onClick={save} loading={saving} disabled={!changed || !!commissionError || !!modesError || !!daysError}>
             Save changes
           </Button>
           {changed ? (
             <Button
               variant="ghost"
               onClick={() => {
-                setCommission(String(member.commissionPercent));
+                setTakes(wasTaking);
+                setDesk(hadDesk);
+                setCommission(String(member.commissionPercent ?? 40));
                 setDays(member.workingDays);
               }}
             >

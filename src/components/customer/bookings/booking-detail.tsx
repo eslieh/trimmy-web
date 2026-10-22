@@ -106,7 +106,7 @@ export function BookingDetail({ initial, profile }: { initial: Booking; profile:
               {staff ? <Avatar name={staff.name} src={staff.avatarUrl} size={40} /> : <span className="grid size-10 place-items-center rounded-full bg-surface-3 font-bold text-ink-2" aria-hidden>?</span>}
               <div>
                 <p className="font-semibold">{booking.staffName}</p>
-                <p className="text-sm capitalize text-ink-2">{staff ? staff.role.replace(/_/g, ' ') : booking.staffId ? 'Professional' : 'The business will assign someone'}</p>
+                <p className="text-sm text-ink-2">{staff ? staff.specialties.slice(0, 2).join(', ') || 'Your professional' : booking.staffId ? 'Your professional' : 'The business will assign someone'}</p>
               </div>
             </div>
           </section>
