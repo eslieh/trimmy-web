@@ -73,4 +73,7 @@ export interface MyBusiness {
   // Staff who also run the front desk (role stays 'staff'); always true for 'front_desk'.
   frontDeskAccess?: boolean;
   modes?: ('staff' | 'front_desk')[];
+  // Paused by Trimmy's team: customers can't find or book it online (the message for the owner).
+  suspendedAt?: string | null;
+  suspendedReason?: string | null;
 }

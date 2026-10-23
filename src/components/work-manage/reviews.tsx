@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/toast';
 import { useWork } from '@/components/work/context';
 import { Stars } from '@/components/customer/icons';
 import { ReviewCard } from '@/components/customer/reviews/review-card';
+import { ReportButton } from '@/components/customer/report-button';
 import { api, errorMessage } from '@/lib/api';
 import type { BusinessProfileReview, ReviewPage } from '@/types/discovery';
 import { ErrorBlock, Loading } from './shared';
@@ -127,6 +128,7 @@ function ReviewWithReply({ review, onChange }: { review: BusinessProfileReview; 
           ) : null
         }
       />
+      {!editing ? <ReportButton targetType="review" targetId={review.reviewId} name={`${review.authorName}'s review`} label="Report as fake or abusive" className="self-end text-xs" /> : null}
       {editing ? (
         <div className="flex flex-col gap-2 rounded-3xl bg-white p-4 ring-1 ring-ink/5">
           <Textarea

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getSession } from '@/lib/server/auth';
 import { NotificationBell } from '@/components/notifications/bell';
@@ -39,6 +40,16 @@ export default async function WorkLayout({ children, params }: LayoutProps<'/wor
                 <AccountMenu />
               </div>
             </header>
+            {workplace.suspendedAt ? (
+              // Paused by Trimmy's team: the owner's day keeps working, customers just can't find or book.
+              <div role="status" className="border-b border-danger/20 bg-danger/5 px-4 py-3 text-sm sm:px-6">
+                <p className="font-semibold text-danger">{workplace.name} is paused on Trimmy: customers can&apos;t find or book it online.</p>
+                <p className="mt-0.5 text-ink-2">
+                  {workplace.suspendedReason}{' '}
+                  <Link href={`/account/help/new?businessId=${businessId}`} className="font-semibold text-ink underline">Talk to Trimmy&apos;s team</Link>
+                </p>
+              </div>
+            ) : null}
             <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
           </div>
         </div>

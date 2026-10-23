@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Eyebrow } from '@/components/ui/misc';
 import Link from 'next/link';
 import { ReviewCard } from '@/components/customer/reviews/review-card';
+import { ReportButton } from '@/components/customer/report-button';
 import { ButtonLink, buttonClass } from '@/components/ui/button';
 import { money } from '@/lib/format';
 import { getProfile } from '@/components/customer/data';
@@ -120,8 +121,9 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
                   </div>
                   <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {profile.reviews.map((r) => (
-                      <li key={r.reviewId}>
+                      <li key={r.reviewId} className="flex flex-col gap-1">
                         <ReviewCard review={r} />
+                        <ReportButton targetType="review" targetId={r.reviewId} name={`${r.authorName}'s review`} className="self-end text-xs" />
                       </li>
                     ))}
                   </ul>
@@ -191,6 +193,7 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
                 </Policy>
               </ul>
             </Section>
+            <ReportButton targetType="business" targetId={profile.businessId} name={profile.name} label="Report this business" className="self-start" />
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">

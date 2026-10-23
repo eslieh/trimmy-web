@@ -47,6 +47,11 @@ export function routeForNotification(n: Pick<AppNotification, 'type' | 'data'>):
       return '/account';
     case 'review_replied':
       return '/account/reviews';
+    case 'business_suspended': // Trimmy's team paused it (the layout explains why)
+    case 'business_restored':
+      return work;
+    case 'payment_details_failed':
+      return work ? `${work}/settings/payment` : null;
     case 'support_reply': { // Trimmy's team answered a Help question
       const ticketId = str(n.data.ticketId);
       return ticketId ? `/account/help/${ticketId}` : '/account/help';

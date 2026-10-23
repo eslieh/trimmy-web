@@ -17,6 +17,7 @@ import { formatPhone } from './phone';
 import { instantDate } from './time';
 import { useApi, useBookingEvents } from './use-api';
 import { useBusiness } from './use-business';
+import { ReportButton } from '@/components/customer/report-button';
 
 // One customer: contact, their visit history here (list-business-bookings
 // ?customerId=, newest first, every source) and a pre-filled New appointment.
@@ -143,6 +144,7 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
           )}
         </section>
       </div>
+      <ReportButton targetType="customer" targetId={customerId} name={name} label="Report this customer to Trimmy" className="self-center" />
 
       <BookingModal
         mode={booking ? 'scheduled' : null}

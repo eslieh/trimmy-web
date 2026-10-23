@@ -6,6 +6,7 @@ import { Eyebrow } from '@/components/ui/misc';
 import { getProfile } from '@/components/customer/data';
 import { Stars } from '@/components/customer/icons';
 import { ReviewCard } from '@/components/customer/reviews/review-card';
+import { ReportButton } from '@/components/customer/report-button';
 import { serverApi } from '@/lib/server/api';
 import type { ReviewPage } from '@/types/discovery';
 
@@ -51,8 +52,9 @@ export default async function BusinessReviewsPage({ params, searchParams }: Page
       {data.reviews.length ? (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {data.reviews.map((r) => (
-            <li key={r.reviewId}>
+            <li key={r.reviewId} className="flex flex-col gap-1">
               <ReviewCard review={r} />
+              <ReportButton targetType="review" targetId={r.reviewId} name={`${r.authorName}'s review`} className="self-end text-xs" />
             </li>
           ))}
         </ul>
