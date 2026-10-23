@@ -60,8 +60,12 @@ async function forward(request: NextRequest, ctx: RouteContext<'/api/proxy/[...p
   upstream.headers.forEach((value, name) => {
     if (!HOP_BY_HOP.has(name.toLowerCase())) headers.set(name, value);
   });
+  // Trimmy's team disabled the account: end the session here too (the page shows the message).
+  const disabled = upstream.status === 403
+    && (await upstream.clone().json().catch(() => null))?.error === 'account_disabled';
   const response = new NextResponse(upstream.body, { status: upstream.status, headers });
-  if (refreshed) setSessionOn(response, refreshed);
+  if (disabled) clearSession(response.cookies);
+  else if (refreshed) setSessionOn(response, refreshed);
   else if (upstream.status === 401 && refresh) clearSession(response.cookies);
   return response;
 }
