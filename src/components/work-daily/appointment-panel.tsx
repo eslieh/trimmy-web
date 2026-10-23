@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/misc';
+import { Avatar, Badge } from '@/components/ui/misc';
 import { toast } from '@/components/ui/toast';
 import { useWork, workHref } from '@/components/work/context';
 import { api, errorMessage } from '@/lib/api';
@@ -197,7 +197,10 @@ export function AppointmentPanel({
           ) : null
         }
       >
-        <p className={cx('font-semibold', !b.staffId && 'text-warning')}>{b.staffId ? b.staffName : 'Unassigned (any available)'}</p>
+        <div className="flex items-center gap-3">
+          {b.staffId ? <Avatar name={b.staffName} src={b.staffAvatarUrl} size={36} /> : null}
+          <p className={cx('font-semibold', !b.staffId && 'text-warning')}>{b.staffId ? b.staffName : 'Unassigned (any available)'}</p>
+        </div>
       </Section>
 
       {inVisit && visit ? (
@@ -207,7 +210,10 @@ export function AppointmentPanel({
       ) : null}
 
       <Section title="Customer">
-        <p className="font-semibold">{b.customerName}</p>
+        <div className="flex items-center gap-3">
+          <Avatar name={b.customerName} src={b.customerAvatarUrl} size={36} />
+          <p className="font-semibold">{b.customerName}</p>
+        </div>
         {b.customerPhone ? (
           <a href={`tel:${b.customerPhone}`} className="block text-ink-2 hover:text-ink hover:underline">
             {formatPhone(b.customerPhone)}

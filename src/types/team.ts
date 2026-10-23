@@ -43,6 +43,8 @@ export type TeamInvitation = {
   commissionPercent: number | null;
   // Staff who also run the front desk.
   frontDeskAccess?: boolean;
+  // Their profile picture once they've joined.
+  avatarUrl?: string | null;
   workingDays: (keyof WeeklyHours)[] | null; // null = follows the business's own working days
   sentAt: string;
 };

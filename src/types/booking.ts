@@ -44,6 +44,9 @@ export type Booking = {
   customerHasAccount?: boolean;
   staffId: string | null;
   staffName: string;
+  staffAvatarUrl?: string | null;
+  // The customer's profile picture, when the booking is linked to their account.
+  customerAvatarUrl?: string | null;
   services: BookingServiceLine[];
   date: string; // 'YYYY-MM-DD'
   time: string; // 'HH:mm'

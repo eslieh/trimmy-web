@@ -101,7 +101,7 @@ function MemberTable({ members }: { members: TeamInvitation[] }) {
         {members.map((m) => (
           <li key={m.invitationId}>
             <Link href={workHref(businessId, `team/${m.invitationId}`)} className="flex items-center gap-3 py-3">
-              <Avatar name={memberName(m)} size={44} />
+              <Avatar name={memberName(m)} src={m.avatarUrl} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{memberName(m)}</p>
                 <p className="truncate text-sm text-ink-2">
@@ -129,7 +129,7 @@ function MemberTable({ members }: { members: TeamInvitation[] }) {
             <tr key={m.invitationId} className="hover:bg-surface-2/60">
               <td className={td}>
                 <Link href={workHref(businessId, `team/${m.invitationId}`)} className="flex items-center gap-3 font-semibold hover:underline">
-                  <Avatar name={memberName(m)} size={36} />
+                  <Avatar name={memberName(m)} src={m.avatarUrl} size={36} />
                   <span className="min-w-0">
                     <span className="block truncate">{memberName(m)}</span>
                     {m.name && (m.phone || m.email) ? <span className="block truncate text-xs font-normal text-ink-2">{m.phone || m.email}</span> : null}
@@ -178,7 +178,7 @@ export function PayoutsWaiting() {
           {payouts.slice(0, 6).map((p) => (
             <li key={p.payoutId}>
               <Link href={workHref(businessId, `payouts/${p.payoutId}`)} className="flex items-center gap-3 py-3 hover:opacity-80">
-                <Avatar name={p.staffName} size={36} />
+                <Avatar name={p.staffName} src={p.staffAvatarUrl} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{p.staffName}</p>
                   <p className="text-xs text-ink-2">{relativeTime(p.requestedAt)}</p>

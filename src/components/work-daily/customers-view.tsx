@@ -87,7 +87,7 @@ export function CustomersView() {
                   >
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-3">
-                        <Avatar name={c.name} size={32} />
+                        <Avatar name={c.name} src={c.avatarUrl} size={32} />
                         <span className="min-w-0">
                           <span className="block truncate font-semibold">{c.name}</span>
                           {/* Phones: contact under the name. */}

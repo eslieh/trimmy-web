@@ -87,7 +87,7 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
         <div className="flex flex-col gap-4">
           <Card>
             <div className="flex items-center gap-4">
-              <Avatar name={name || '?'} size={56} />
+              <Avatar name={name || '?'} src={record?.avatarUrl ?? latest?.customerAvatarUrl} size={56} />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-extrabold tracking-tight">{name || 'Customer'}</h1>
                 {onTrimmy ? <p className="text-sm font-semibold text-brand">On Trimmy</p> : null}

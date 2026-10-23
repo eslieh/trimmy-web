@@ -8,6 +8,7 @@ export type PayoutRequest = {
   businessId: string;
   staffId: string | null;
   staffName: string;
+  staffAvatarUrl?: string | null;
   amount: number;
   currency: 'KES';
   status: PayoutStatus;
@@ -85,6 +86,7 @@ export type WalletAdjustment = {
   businessId: string;
   staffId: string | null;
   staffName: string;
+  staffAvatarUrl?: string | null;
   kind: AdjustmentKind;
   amount: number;
   signedAmount: number;

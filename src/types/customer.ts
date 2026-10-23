@@ -8,6 +8,7 @@ export type Customer = {
   name: string;
   phone: string | null;
   email: string | null; // phone is E.164 from the server
+  avatarUrl?: string | null; // their Trimmy photo, when the contact matches an account
   createdAt: string;
   bookingsCount: number; // bookings with this phone, cancelled ones excluded
   lastBookingAt: string | null;

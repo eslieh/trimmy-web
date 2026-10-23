@@ -51,7 +51,7 @@ export function MemberDetail({ memberId }: { memberId: string }) {
     <div className="flex flex-col gap-6">
       <BackLink href={workHref(businessId, 'team')}>Team</BackLink>
       <div className="flex flex-wrap items-center gap-4">
-        <Avatar name={name} size={64} />
+        <Avatar name={name} src={member.avatarUrl} size={64} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-2xl font-extrabold tracking-tight sm:text-3xl">{name}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-ink-2">

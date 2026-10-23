@@ -67,7 +67,7 @@ export function PayoutsPage() {
             {queue.map((p) => (
               <li key={p.payoutId} className="flex flex-wrap items-center gap-3 py-3.5">
                 <Link href={workHref(businessId, `payouts/${p.payoutId}`)} className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
-                  <Avatar name={p.staffName} size={40} />
+                  <Avatar name={p.staffName} src={p.staffAvatarUrl} size={40} />
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{p.staffName}</p>
                     <p className="text-sm text-ink-2">Asked {relativeTime(p.requestedAt)}</p>
@@ -182,7 +182,7 @@ export function PayoutDetail({ payoutId }: { payoutId: string }) {
       <div>{back}</div>
       <Card className="p-6! sm:p-8!">
         <div className="flex items-start gap-4">
-          <Avatar name={payout.staffName} size={56} />
+          <Avatar name={payout.staffName} src={payout.staffAvatarUrl} size={56} />
           <div className="min-w-0 flex-1">
             <p className="text-sm text-ink-2">Payout request</p>
             <h1 className="truncate text-xl font-extrabold">{payout.staffName}</h1>
