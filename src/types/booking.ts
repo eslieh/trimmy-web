@@ -89,6 +89,9 @@ export type BookingReview = {
   rating: number; // 1–5
   text: string | null;
   createdAt: string;
+  // The business's reply, once written.
+  replyText?: string | null;
+  repliedAt?: string | null;
 };
 
 // The business's noShow.feePercent of the total. With no card on file only

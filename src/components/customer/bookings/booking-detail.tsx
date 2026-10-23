@@ -130,6 +130,12 @@ export function BookingDetail({ initial, profile }: { initial: Booking; profile:
                 <>
                   <Stars rating={booking.review.rating} />
                   {booking.review.text ? <p className="mt-2">{booking.review.text}</p> : null}
+                  {booking.review.replyText ? (
+                    <div className="mt-3 rounded-2xl bg-ink/[0.03] p-4">
+                      <p className="text-xs font-semibold tracking-wide text-ink-2 uppercase">Reply from {booking.businessName}</p>
+                      <p className="mt-1">{booking.review.replyText}</p>
+                    </div>
+                  ) : null}
                 </>
               ) : (
                 <>

@@ -12,6 +12,7 @@ export const WORK_NAV: NavSection[] = [
       { href: 'bookings', label: 'Bookings' }, // list & search; also the unassigned / refunds-owed queues
       { href: 'customers', label: 'Customers' },
       { href: 'day-summary', label: 'Day summary' },
+      { href: 'reviews', label: 'Reviews' }, // read and reply (owner and front desk)
     ],
   },
   {

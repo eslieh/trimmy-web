@@ -46,13 +46,28 @@ export type BusinessProfileStaffMember = {
   portfolio: string[];
 };
 
+// A review with who wrote it, who did the service, what was done and when, and
+// the business's reply. Older reviews lack the staff and services.
 export type BusinessProfileReview = {
   reviewId: string;
   authorName: string;
+  authorAvatarUrl?: string | null;
   rating: number;
   text: string;
   createdAt: string;
+  businessId?: string | null;
+  businessName?: string | null;
+  bookingId?: string | null;
+  staffId?: string | null;
+  staffName?: string | null;
+  staffAvatarUrl?: string | null;
+  services?: string[];
+  visitDate?: string | null; // 'YYYY-MM-DD'
+  reply?: { text: string; repliedAt: string } | null;
 };
+
+// GET /businesses/{id}/reviews, GET /me/reviews
+export type ReviewPage = { reviews: BusinessProfileReview[]; total: number; averageRating: number };
 
 // The full customer-facing profile — what C1's "tapping a result opens a
 // business profile" and the Business Profile candidate screen need.

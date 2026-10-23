@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Avatar, Eyebrow } from '@/components/ui/misc';
+import { Eyebrow } from '@/components/ui/misc';
+import Link from 'next/link';
+import { ReviewCard } from '@/components/customer/reviews/review-card';
 import { ButtonLink, buttonClass } from '@/components/ui/button';
-import { money, relativeTime } from '@/lib/format';
+import { money } from '@/lib/format';
 import { getProfile } from '@/components/customer/data';
 import { Gallery } from '@/components/customer/business/gallery';
 import { CartPanel, ServiceMenu } from '@/components/customer/business/service-menu';
@@ -116,14 +118,17 @@ export default async function BusinessPage({ params }: PageProps<'/b/[businessId
                       <p className="text-sm text-ink-2">{profile.reviewCount === 1 ? '1 review' : `${profile.reviewCount} reviews`}</p>
                     </div>
                   </div>
-                  <ReviewList reviews={profile.reviews.slice(0, 6)} />
-                  {profile.reviews.length > 6 ? (
-                    <details className="mt-6">
-                      <summary className={buttonClass('secondary', 'sm', 'cursor-pointer list-none')}>Show all {profile.reviews.length} reviews</summary>
-                      <div className="mt-6">
-                        <ReviewList reviews={profile.reviews.slice(6)} />
-                      </div>
-                    </details>
+                  <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {profile.reviews.map((r) => (
+                      <li key={r.reviewId}>
+                        <ReviewCard review={r} />
+                      </li>
+                    ))}
+                  </ul>
+                  {profile.reviewCount > profile.reviews.length ? (
+                    <Link href={`/b/${profile.businessId}/reviews`} className={buttonClass('secondary', 'sm', 'mt-6')}>
+                      See all {profile.reviewCount} reviews
+                    </Link>
                   ) : null}
                 </>
               ) : (
@@ -226,28 +231,6 @@ function Policy({ title, children }: { title: string; children: React.ReactNode 
       <p className="text-sm font-semibold tracking-wide uppercase">{title}</p>
       <p className="mt-2 text-sm leading-6 text-ink-2">{children}</p>
     </li>
-  );
-}
-
-function ReviewList({ reviews }: { reviews: BusinessProfile['reviews'] }) {
-  return (
-    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      {reviews.map((r) => (
-        <li key={r.reviewId} className="rounded-3xl bg-ink/[0.03] p-5">
-          <div className="flex items-center gap-3">
-            <Avatar name={r.authorName} size={40} />
-            <div>
-              <p className="font-semibold">{r.authorName}</p>
-              <p className="text-sm text-ink-2">{relativeTime(r.createdAt)}</p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <Stars rating={r.rating} className="size-3.5" />
-          </div>
-          {r.text ? <p className="mt-2 leading-relaxed">{r.text}</p> : null}
-        </li>
-      ))}
-    </ul>
   );
 }
 
