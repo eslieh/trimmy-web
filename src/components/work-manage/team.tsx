@@ -19,6 +19,7 @@ import {
   type Weekday,
 } from './shared';
 import { PortfolioPanel } from './portfolio';
+import { invalidateBusiness } from '@/components/work-daily/use-business';
 import { useApi } from './use-api';
 
 export function memberName(m: TeamInvitation): string {
@@ -84,6 +85,7 @@ export function TeamRoster() {
         onInvited={() => {
           setInviting(false);
           reload();
+          invalidateBusiness(businessId); // a new member can change the calendar's staff
         }}
       />
     </div>

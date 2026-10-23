@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useWork, workHref } from '@/components/work/context';
+import { invalidateBusiness } from '@/components/work-daily/use-business';
 import { useSetupStep } from '@/components/setup/context';
 import { cx } from '@/lib/format';
 import type { BusinessDetail } from '@/types/work-manage';
@@ -66,7 +68,13 @@ export function SettingsSection({
   subtitle?: string;
   children: (business: BusinessDetail, reload: () => void) => React.ReactNode;
 }) {
-  const { data, error, reload } = useBusiness();
+  const { data, error, reload: reloadSettings } = useBusiness();
+  const { businessId } = useWork();
+  // A save here can change what the calendar and day grid show: drop their cached copy too.
+  const reload = useCallback(() => {
+    invalidateBusiness(businessId);
+    reloadSettings();
+  }, [businessId, reloadSettings]);
   return (
     <div className="flex flex-col gap-6">
       <div>

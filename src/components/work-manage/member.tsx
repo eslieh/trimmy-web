@@ -17,6 +17,7 @@ import {
 } from './shared';
 import { memberName, roleLabel } from './team';
 import { PortfolioPanel } from './portfolio';
+import { invalidateBusiness } from '@/components/work-daily/use-business';
 import { TimeOffPanel } from './time-off';
 import { useApi } from './use-api';
 import { WalletPanel } from './wallet';
@@ -110,6 +111,7 @@ export function MemberDetail({ memberId }: { memberId: string }) {
         onConfirm={async () => {
           try {
             await api(`/businesses/${businessId}/team/members/${member.invitationId}`, { method: 'DELETE' });
+            invalidateBusiness(businessId);
             toast.success(member.status === 'pending' ? 'Invitation cancelled' : `${name} removed from the team`);
             router.push(workHref(businessId, 'team'));
           } catch (err) {
@@ -151,6 +153,7 @@ function SettingsCard({ member, onSaved }: { member: TeamInvitation; onSaved: (m
         },
       });
       onSaved(updated);
+      invalidateBusiness(businessId); // name, days or role changes show on the calendar
       toast.success('Saved');
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't save."));
@@ -242,6 +245,7 @@ function ServicesCard({ staffId, role }: { staffId: string; role: TeamInvitation
       const result = await api<StaffServices>(`/businesses/${businessId}/staff/${staffId}/services`, { method: 'PUT', body });
       saved.mutate(() => result);
       setDraft(null);
+      invalidateBusiness(businessId); // who can take which bookings
       toast.success('Services saved');
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't save their services."));

@@ -26,8 +26,15 @@ const EMPTY_HOURS: WeeklyHours = {
 };
 
 // One load per business per page session: every daily-work page needs the
-// same hours, services and staff, and they rarely change mid-shift.
+// same hours, services and staff, and they rarely change mid-shift. Settings,
+// team and member saves call invalidateBusiness so the next view reloads.
 const cache = new Map<string, Promise<WorkBusiness>>();
+
+// After the business changes (hours, services, staff, name...): the calendar,
+// day grid and booking form load it fresh next time.
+export function invalidateBusiness(businessId: string): void {
+  cache.delete(businessId);
+}
 
 async function load({ businessId, role, staffId }: WorkContextValue): Promise<WorkBusiness> {
   // Front desk can't use the owner endpoints, so both roles read the public

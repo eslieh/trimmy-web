@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/field';
@@ -74,6 +75,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
   const initial = toForm(business);
   const [form, setForm] = useState<Form>(initial);
   const [custom, setCustom] = useState('');
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const setup = useSetupStep();
   const [submitted, setSubmitted] = useState(false);
@@ -125,6 +127,7 @@ function InfoForm({ business, reload }: { business: BusinessDetail; reload: () =
       setup?.next(); // in the setup wizard: on to the next step
       setSubmitted(false);
       reload();
+      router.refresh(); // the sidebar and header show the business name from the session
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't save."));
     } finally {
