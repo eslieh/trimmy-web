@@ -60,7 +60,10 @@ export function WorkSidebar() {
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-ink/5 bg-white px-3 py-6 lg:flex">
         {header}
         <div className="flex-1 overflow-y-auto">{links}</div>
-        <Link href="/" className="mt-4 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
+        <Link href={`/account/help/new?businessId=${businessId}`} className="mt-4 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
+          Help from Trimmy
+        </Link>
+        <Link href="/" className="rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
           ← Back to Trimmy
         </Link>
       </aside>
@@ -78,7 +81,10 @@ export function WorkSidebar() {
           <aside className="h-full w-72 overflow-y-auto bg-white px-3 py-6" onClick={(e) => e.stopPropagation()}>
             {header}
             {links}
-            <Link href="/" className="mt-6 block rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
+            <Link href={`/account/help/new?businessId=${businessId}`} className="mt-6 block rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
+              Help from Trimmy
+            </Link>
+            <Link href="/" className="block rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-2 hover:bg-surface-2">
               ← Back to Trimmy
             </Link>
           </aside>

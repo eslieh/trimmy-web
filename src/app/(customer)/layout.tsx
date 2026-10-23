@@ -51,7 +51,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           <span>© {new Date().getFullYear()} Trimmy</span>
           <Link href="/legal/privacy" className="hover:text-ink">Privacy</Link>
           <Link href="/legal/terms" className="hover:text-ink">Terms</Link>
-          <a href="mailto:support@trimmy.com" className="hover:text-ink">Help</a>
+          <Link href="/account/help" className="hover:text-ink">Help</Link>
           <Link href="/setup" className="ml-auto font-semibold text-ink hover:underline">List your business</Link>
         </div>
       </footer>

@@ -45,6 +45,12 @@ export function routeForNotification(n: Pick<AppNotification, 'type' | 'data'>):
     }
     case 'team_invitation':
       return '/account';
+    case 'review_replied':
+      return '/account/reviews';
+    case 'support_reply': { // Trimmy's team answered a Help question
+      const ticketId = str(n.data.ticketId);
+      return ticketId ? `/account/help/${ticketId}` : '/account/help';
+    }
     case 'payout_responded':
     case 'wallet_adjusted': // staff earnings live in the mobile app
       return null;

@@ -21,6 +21,7 @@ export default async function AccountPage() {
     { href: '/account/notifications', title: 'Notifications', body: 'What we tell you about, and how' },
     { href: '/bookings', title: 'My bookings', body: 'Upcoming, past and cancelled appointments' },
     { href: '/account/reviews', title: 'My reviews', body: "Your reviews and the businesses' replies" },
+    { href: '/account/help', title: 'Help', body: "Ask Trimmy's team, and see their answers" },
   ];
   return (
     <div className="mx-auto max-w-3xl">

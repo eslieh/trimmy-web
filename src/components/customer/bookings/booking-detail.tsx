@@ -179,6 +179,9 @@ export function BookingDetail({ initial, profile }: { initial: Booking; profile:
               Book again
             </ButtonLink>
           ) : null}
+          <Link href={`/account/help/new?bookingId=${booking.bookingId}`} className="text-center text-sm font-semibold text-ink-2 underline hover:text-ink">
+            Get help with this booking
+          </Link>
 
           {profile ? (
             <div className="rounded-card border border-line p-5">
