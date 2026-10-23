@@ -1,210 +1,25 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Button, Spinner } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
 import { toast } from '@/components/ui/toast';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { cx, money } from '@/lib/format';
-import type { Booking, PaymentMethod } from '@/types/booking';
-import type { ChargeStarted, WorkBusiness } from '@/types/work-daily';
-import { InlineError, Segmented, SummaryRow } from './bits';
-import { formatPhone, normalizePhone, PHONE_HINT } from './phone';
-import { failureMessage } from './status';
+import type { Booking } from '@/types/booking';
+import type { WorkBusiness } from '@/types/work-daily';
+import { InlineError } from './bits';
 import { staffForServices } from './use-business';
 
-// The Appointment panel's dialogs: charge (with tip), assign staff,
-// reschedule, mark refund paid, cancel. Each calls back with the updated Booking.
+// The Appointment panel's dialogs: assign staff, reschedule, mark refund
+// paid, cancel. Each calls back with the updated Booking. (Charging is its
+// own page: checkout.tsx.)
 
 type Done = (booking: Booking) => void;
 
-const TIP_PRESETS = [0, 50, 100, 200];
-const POLL_MS = 3000;
-const POLL_LIMIT_MS = 2 * 60 * 1000;
-
 export function balanceOf(b: Booking): number {
   return (b.balanceDue ?? { amount: b.totalAmount.amount - (b.depositPaid?.amount ?? 0) }).amount;
-}
-
-// Charge customer: M-Pesa prompt or cash, plus an optional tip for the
-// assigned staff member in the same payment (charge-booking). M-Pesa
-// answers 202 and we poll the booking every 3s, like mobile's waitForCharge.
-export function ChargeModal({ booking, open, onClose, onDone }: { booking: Booking; open: boolean; onClose: () => void; onDone: Done }) {
-  const [method, setMethod] = useState<PaymentMethod>('mpesa');
-  const [phone, setPhone] = useState(formatPhone(booking.customerPhone));
-  const [tip, setTip] = useState(0);
-  const [customTip, setCustomTip] = useState('');
-  const [step, setStep] = useState<'form' | 'pending' | 'success'>('form');
-  const [error, setError] = useState('');
-  const [charged, setCharged] = useState<{ amount: number; method: PaymentMethod } | null>(null);
-  const polling = useRef(0); // bumped to stop an in-flight poll
-  useEffect(() => () => void (polling.current += 1), []);
-
-  const balance = balanceOf(booking);
-  const tipAmount = customTip ? Number(customTip) : tip;
-  const total = balance + (booking.staffId ? tipAmount : 0);
-
-  const reset = () => {
-    polling.current += 1;
-    setStep('form');
-    setError('');
-    setTip(0);
-    setCustomTip('');
-    setCharged(null);
-  };
-  const close = () => {
-    reset();
-    onClose();
-  };
-
-  const succeed = (b: Booking) => {
-    setStep('success');
-    onDone(b);
-  };
-
-  const waitForCharge = async () => {
-    const run = ++polling.current;
-    const started = Date.now();
-    while (Date.now() - started < POLL_LIMIT_MS) {
-      await new Promise((r) => setTimeout(r, POLL_MS));
-      if (run !== polling.current) return;
-      const b = await api<Booking>(`/bookings/${booking.bookingId}`).catch(() => null); // a dropped poll isn't an outcome
-      if (run !== polling.current) return;
-      if (!b) continue;
-      if (b.paymentStatus === 'paid') return succeed(b);
-      const attempt = b.chargePayment;
-      if (attempt && (attempt.status === 'failed' || attempt.status === 'timeout')) {
-        onDone(b);
-        setError(`${failureMessage(attempt.failureReason)} Try again or take cash.`);
-        return setStep('form');
-      }
-    }
-    setError(`${failureMessage('timeout')} Try again or take cash.`);
-    setStep('form');
-  };
-
-  const submit = async () => {
-    setError('');
-    const tipValue = booking.staffId && tipAmount > 0 ? tipAmount : 0;
-    if (customTip && !(Number(customTip) >= 0 && Number(customTip) <= 100000)) return setError('Enter a tip between 0 and 100,000.');
-    let normalized: string | null = null;
-    if (method === 'mpesa') {
-      normalized = normalizePhone(phone);
-      if (!normalized) return setError(`Enter the customer's M-Pesa number (${PHONE_HINT}).`);
-    }
-    setCharged({ amount: balance + tipValue, method });
-    setStep('pending');
-    try {
-      const res = await api<Booking | ChargeStarted>(`/bookings/${booking.bookingId}/charge`, {
-        method: 'POST',
-        body: { method, ...(normalized ? { phone: normalized } : {}), ...(tipValue ? { tip: tipValue } : {}) },
-      });
-      // Cash, or nothing left to pay: the paid Booking comes straight back.
-      if ('totalAmount' in res) return succeed(res);
-      await waitForCharge();
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'payment_in_progress') return waitForCharge();
-      setError(
-        err instanceof ApiError && err.code === 'tip_needs_staff'
-          ? 'Assign someone to this appointment to give them a tip.'
-          : errorMessage(err, "Couldn't charge the customer."),
-      );
-      setStep('form');
-    }
-  };
-
-  return (
-    <Modal
-      open={open}
-      onClose={close}
-      title={step === 'form' ? 'Charge customer' : undefined}
-      locked={step === 'pending'}
-      footer={
-        step === 'form' ? (
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button onClick={submit}>{method === 'mpesa' ? `Send M-Pesa prompt · ${money(total)}` : `Record cash · ${money(total)}`}</Button>
-          </div>
-        ) : null
-      }
-    >
-      {step === 'pending' ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center" aria-live="polite">
-          <Spinner className="size-8 text-brand" />
-          {charged?.method === 'mpesa' ? (
-            <>
-              <p className="text-lg font-bold">Check their phone</p>
-              <p className="max-w-xs text-ink-2">
-                We sent an M-Pesa prompt for {money(charged.amount)} to {phone}. Waiting for them to enter their PIN.
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => { polling.current += 1; close(); }}>
-                Stop waiting
-              </Button>
-            </>
-          ) : (
-            <p className="text-lg font-bold">Recording payment…</p>
-          )}
-        </div>
-      ) : step === 'success' ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center" aria-live="polite">
-          <span className="grid size-14 place-items-center rounded-full bg-success/10 text-2xl text-success" aria-hidden>
-            ✓
-          </span>
-          <p className="text-lg font-bold">{charged?.method === 'cash' ? 'Cash recorded' : 'Payment received'}</p>
-          <p className="text-ink-2">{charged ? money(charged.amount) : ''} from {booking.customerName}</p>
-          <Button onClick={close} className="mt-2">
-            Done
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-5 pb-2">
-          <div className="rounded-xl bg-surface-2 px-4 py-3">
-            <SummaryRow label="Balance" value={money(balance)} />
-            {booking.depositPaid ? <SummaryRow muted label="Deposit already paid" value={money(booking.depositPaid)} /> : null}
-            {booking.staffId && tipAmount > 0 ? <SummaryRow muted label={`Tip for ${booking.staffName}`} value={money(tipAmount)} /> : null}
-            <SummaryRow strong label="To pay now" value={money(total)} />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold">Payment method</p>
-            <Segmented label="Payment method" value={method} onChange={setMethod} options={[{ key: 'mpesa', label: 'M-Pesa' }, { key: 'cash', label: 'Cash' }]} />
-          </div>
-
-          {method === 'mpesa' ? (
-            <Input label="Customer's M-Pesa number" type="tel" inputMode="tel" placeholder="0712 345 678" value={phone} onChange={(e) => setPhone(e.target.value)} hint="They get a prompt to enter their PIN." />
-          ) : null}
-
-          {booking.staffId ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold">Tip for {booking.staffName} (optional)</p>
-              <Segmented
-                label="Tip"
-                value={customTip ? null : tip}
-                onChange={(v) => {
-                  setCustomTip('');
-                  setTip(v);
-                }}
-                options={TIP_PRESETS.map((a) => ({ key: a, label: a === 0 ? 'None' : `${a}` }))}
-              />
-              <Input
-                label="Other amount (KSh)"
-                inputMode="numeric"
-                value={customTip}
-                onChange={(e) => setCustomTip(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                hint="Paid with the balance in one go; it goes to their wallet."
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-ink-2">Assign someone to this appointment to add a tip for them.</p>
-          )}
-          <InlineError>{error}</InlineError>
-        </div>
-      )}
-    </Modal>
-  );
 }
 
 // Give an unassigned booking to someone, or move it (assign-booking-staff).

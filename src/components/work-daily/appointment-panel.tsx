@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonLink } from '@/components/ui/button';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { toast } from '@/components/ui/toast';
 import { useWork, workHref } from '@/components/work/context';
 import { api, errorMessage } from '@/lib/api';
 import { cx, dayLabel, money, relativeTime, timeLabel } from '@/lib/format';
 import type { Booking, BookingStatus } from '@/types/booking';
-import { AssignModal, balanceOf, CancelModal, ChargeModal, RefundModal, RescheduleModal } from './appointment-actions';
+import { AssignModal, balanceOf, CancelModal, RefundModal, RescheduleModal } from './appointment-actions';
 import { Loading, LoadError, StatusBadge, SummaryRow } from './bits';
 import { formatPhone } from './phone';
 import { needsCharge, PAYMENT_METHOD_LABEL } from './status';
@@ -17,7 +17,7 @@ import { useBusinessClock } from './hooks';
 import { durationLabel, toMinutes, toTime } from './time';
 import { useApi, useBookingEvents } from './use-api';
 import { useBusiness } from './use-business';
-import { AddServiceModal, VisitChargeModal, VisitParts } from './visit';
+import { AddServiceModal, VisitParts } from './visit';
 import type { Visit } from '@/types/work-daily';
 
 const CANCEL_REASON: Record<string, string> = {
@@ -26,7 +26,7 @@ const CANCEL_REASON: Record<string, string> = {
   payment_expired: 'because the deposit wasn’t paid in time',
 };
 
-type Dialog = 'charge' | 'assign' | 'reschedule' | 'refund' | 'cancel' | 'add-service' | null;
+type Dialog = 'assign' | 'reschedule' | 'refund' | 'cancel' | 'add-service' | null;
 
 // One appointment, everything the desk does with it: contact, services and
 // money (deposit, payment, tip, fees, refunds), status (check in, done,
@@ -133,13 +133,9 @@ export function AppointmentPanel({
           </Button>
         ) : null}
         {inVisit && visitDue > 0 ? (
-          <Button size="sm" variant="brand" onClick={() => setDialog('charge')}>
-            Check out visit {money(visitDue)}
-          </Button>
+          <ButtonLink size="sm" variant="brand" href={workHref(businessId, `checkout/visit/${b.visitId}`)}>Check out visit {money(visitDue)}</ButtonLink>
         ) : !inVisit && needsCharge(b) ? (
-          <Button size="sm" variant="brand" onClick={() => setDialog('charge')}>
-            Charge {money(balance)}
-          </Button>
+          <ButtonLink size="sm" variant="brand" href={workHref(businessId, `checkout/${b.bookingId}`)}>Charge {money(balance)}</ButtonLink>
         ) : null}
         {canAddService ? (
           <Button size="sm" variant="secondary" onClick={() => setDialog('add-service')}>
@@ -330,11 +326,6 @@ export function AppointmentPanel({
         </Section>
       ) : null}
 
-      {inVisit && visit ? (
-        dialog === 'charge' ? <VisitChargeModal visit={visit} open onClose={() => setDialog(null)} onDone={onVisit} /> : null
-      ) : (
-        <ChargeModal key={`charge-${b.bookingId}-${dialog === 'charge'}`} booking={b} open={dialog === 'charge'} onClose={() => setDialog(null)} onDone={apply} />
-      )}
       {dialog === 'add-service' ? (
         <AddServiceModal booking={b} business={business} open onClose={() => setDialog(null)} onDone={onVisit} />
       ) : null}
